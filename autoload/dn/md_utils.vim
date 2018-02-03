@@ -12,12 +12,12 @@ set cpoptions&vim
 
 " Public functions    {{{1
 
-" dn#markdown#panzerMetadata([insert])    {{{2
+" dn#md_utils#panzerMetadata([insert])    {{{2
 " does:   convert yaml metadata block to use panzer
 " params: insert - whether entered from insert mode
 "                  [default=<false>, optional, boolean]
 " return: nil
-function! dn#markdown#panzerMetadata(...) abort
+function! dn#md_utils#panzerMetadata(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:_utils_missing() | return | endif  " requires dn-utils plugin
