@@ -30,7 +30,7 @@ function! dn#md_utils#panzerMetadata(...) abort
         if l:first_line !~# '^---\s*$'
             throw 'Cannot find yaml metadata block at head of file'
         endif
-        call cursor(2, 1)
+        call cursor(1, 1)
         let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
         if !l:end_metadata
             throw 'Cannot find end of metadata block at head of file'
@@ -43,8 +43,8 @@ function! dn#md_utils#panzerMetadata(...) abort
                 call add(l:metadata, l:line)
                 continue
             endif
-            let l:match = matchlist(l:line, '\_^\(\a\%[\l-]\+\):\s')
-            if empty(l:match)  " plain line, ?continuation; keep
+            let l:match = matchlist(l:line, '\_^\(\a\%[\l-]\+\):')
+            if empty(l:match)  " plain line, may be continuation, keep
                 call add(l:metadata, l:line)
                 continue
             endif
