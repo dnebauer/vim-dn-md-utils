@@ -31,7 +31,7 @@ function! dn#md_utils#panzerMetadata(...) abort
             throw 'Cannot find yaml metadata block at head of file'
         endif
         call cursor(2, 1)
-        let l:end_metadata = search('^\(---\|\.\.\.\)\s*$')
+        let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
         if !l:end_metadata
             throw 'Cannot find end of metadata block at head of file'
         endif
