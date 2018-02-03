@@ -67,7 +67,7 @@ function! dn#md_utils#panzerMetadata(...) abort
                     \ '  - Latex12pt',
                     \ '...',
                     \ ]
-        call add(l:metadata, l:panzer_metadata)
+        call extend(l:metadata, l:panzer_metadata)
         " delete current metadata
         execute '1,' . l:end_metadata . 'd'
         " insert new metadata
