@@ -15,3 +15,5 @@ style:  # Latex@pt (@=8-12,14,17,20), PaginateSections
   - Standard
   - Latex12pt
 ```
+
+Convert with mapping `\pm`.

@@ -37,20 +37,20 @@ if count(g:dn_help_plugins, 'dn-md-utils') == 0
         \ '',
         \ '------------------------    -------  -----------------',
         \ '',
-        \ 'convert metadata to panzer  \se      MUMetadata',
+        \ 'convert metadata to panzer  \pm      MUMetadata',
         \ ]
 endif
 
 " Mappings    {{{1
 
-" \se : convert yaml metadata block to use panzer    {{{2
+" \pm : convert yaml metadata block to use panzer    {{{2
 if !hasmapto('<Plug>DnSEI')
-    imap <buffer> <unique> <LocalLeader>se <Plug>DnSEI
+    imap <buffer> <unique> <LocalLeader>pm <Plug>DnSEI
 endif
 imap <buffer> <unique> <Plug>DnSEI
             \ <Esc>:call dn#md_utils#panzerMetadata(g:dn_true)<CR>
 if !hasmapto('<Plug>DnSEN')
-    nmap <buffer> <unique> <LocalLeader>se <Plug>DnSEN
+    nmap <buffer> <unique> <LocalLeader>pm <Plug>DnSEN
 endif
 nmap <buffer> <unique> <Plug>DnSEN
             \ :call dn#md_utils#panzerMetadata()<CR>
