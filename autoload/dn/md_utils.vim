@@ -62,8 +62,8 @@ function! dn#md_utils#panzerMetadata(...) abort
         endwhile
         " add panzer style to end of metadata block
         let l:panzer_metadata = [
-                    \ 'style:  [Standard, Latex12pt]  # Latex@pt '
-                    \ . '(@=8-12,14,17,20), PaginateSections',
+                    \ 'style:  [Standard, Latex12pt]  # panzer: '
+                    \ . '8-12,14,17,20pt; PaginateSections',
                     \ '---',
                     \ ]
         call extend(l:metadata, l:panzer_metadata)
