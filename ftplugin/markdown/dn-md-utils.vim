@@ -85,16 +85,28 @@ endif
 " Mappings    {{{1
 
 " \pm : convert yaml metadata block to use panzer    {{{2
-if !hasmapto('<Plug>DnSEI')
-    imap <buffer> <unique> <LocalLeader>pm <Plug>DnSEI
+if !hasmapto('<Plug>DnPMI')
+    imap <buffer> <unique> <LocalLeader>pm <Plug>DnPMI
 endif
-imap <buffer> <unique> <Plug>DnSEI
+imap <buffer> <unique> <Plug>DnPMI
             \ <Esc>:call dn#md_utils#panzerMetadata(g:dn_true)<CR>
-if !hasmapto('<Plug>DnSEN')
-    nmap <buffer> <unique> <LocalLeader>pm <Plug>DnSEN
+if !hasmapto('<Plug>DnPMN')
+    nmap <buffer> <unique> <LocalLeader>pm <Plug>DnPMN
 endif
-nmap <buffer> <unique> <Plug>DnSEN
+nmap <buffer> <unique> <Plug>DnPMN
             \ :call dn#md_utils#panzerMetadata()<CR>
+
+" \mb : add markdown boilerplate    {{{2
+if !hasmapto('<Plug>DnMBI')
+    imap <buffer> <unique> <LocalLeader>mb <Plug>DnMBI
+endif
+imap <buffer> <unique> <Plug>DnMBI
+            \ <Esc>:call dn#md_utils#panzerify(g:dn_true)<CR>
+if !hasmapto('<Plug>DnMBN')
+    nmap <buffer> <unique> <LocalLeader>mb <Plug>DnMBN
+endif
+nmap <buffer> <unique> <Plug>DnMBN
+            \ :call dn#md_utils#panzerify()<CR>
 
 " Commands    {{{1
 

@@ -10,6 +10,23 @@ let g:loaded_dn_md_utils_autoload = 1
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
+" Variables    {{{1
+let s:metadata_triad = [
+            \ 'title:  "[][source]"',
+            \ 'author: "[][author]"',
+            \ 'date:   ""'
+            \ ]
+let s:metadata_style = 'style:  [Standard, Latex12pt]  # panzer: '
+            \ . '8-12,14,17,20pt; PaginateSections'
+let s:refs = [
+            \ '',
+            \ '[comment]: # (URLs)',
+            \ '',
+            \ '   [author]: ',
+            \ '',
+            \ '   [source]: '
+            \ ]
+
 " Public functions    {{{1
 
 " dn#md_utils#panzerMetadata([insert])    {{{2
@@ -61,16 +78,42 @@ function! dn#md_utils#panzerMetadata(...) abort
             unlet l:metadata[-1]
         endwhile
         " add panzer style to end of metadata block
-        let l:panzer_metadata = [
-                    \ 'style:  [Standard, Latex12pt]  # panzer: '
-                    \ . '8-12,14,17,20pt; PaginateSections',
-                    \ '---',
-                    \ ]
+        let l:panzer_metadata = [s:metadata_style, '---']
         call extend(l:metadata, l:panzer_metadata)
         " delete current metadata
         execute '1,' . l:end_metadata . 'd'
         " insert new metadata
         call append(0, l:metadata)
+    finally
+        call setpos('.', l:pos)
+        redraw!
+    endtry
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_utils#panzerify([insert])    {{{2
+" does:   add panzer/markdown boilerplate to top and bottom of file
+" params: insert - whether entered from insert mode
+"                  [default=<false>, optional, boolean]
+" return: nil
+function! dn#md_utils#panzerify(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:_utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    let l:pos = getcurpos()
+    try
+        " add yaml metadata boilerplate at beginning of file
+        let l:metadata = ['---']
+        call extend(l:metadata, s:metadata_triad)
+        call extend(l:metadata, [s:metadata_style, '---'])
+        call append(0, l:metadata)
+        " add references boilerplate to end of file
+        call append(line('$'), s:refs)
+        " reset cursor
+        let l:pos[1] += len(l:metadata)
     finally
         call setpos('.', l:pos)
         redraw!
@@ -102,3 +145,4 @@ let &cpoptions = s:save_cpo
 unlet s:save_cpo    " }}}1
 
 " vim: set foldmethod=marker :
+            \ ]
