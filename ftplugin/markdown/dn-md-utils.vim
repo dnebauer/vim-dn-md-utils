@@ -76,43 +76,49 @@ if count(g:dn_help_plugins, 'dn-md-utils') == 0
         \ '',
         \ 'Feature                     Mapping  Command',
         \ '',
-        \ '------------------------    -------  -----------------',
+        \ '--------------------------  -------  -----------------',
         \ '',
-        \ 'convert metadata to panzer  \pm      MUMetadata',
+        \ 'add metadata boilerplate    \ab      MUAddBoilerplate',
+        \ '',
+        \ 'convert metadata to panzer  \pm      MUPanzerifyMetadata',
         \ ]
 endif
 
 " Mappings    {{{1
+
+" \ab : add markdown boilerplate    {{{2
+if !hasmapto('<Plug>DnABI')
+    imap <buffer> <unique> <LocalLeader>ab <Plug>DnABI
+endif
+imap <buffer> <unique> <Plug>DnABI
+            \ <Esc>:call dn#md_utils#addBoilerplate(g:dn_true)<CR>
+if !hasmapto('<Plug>DnABN')
+    nmap <buffer> <unique> <LocalLeader>ab <Plug>DnABN
+endif
+nmap <buffer> <unique> <Plug>DnABN
+            \ :call dn#md_utils#addBoilerplate()<CR>
 
 " \pm : convert yaml metadata block to use panzer    {{{2
 if !hasmapto('<Plug>DnPMI')
     imap <buffer> <unique> <LocalLeader>pm <Plug>DnPMI
 endif
 imap <buffer> <unique> <Plug>DnPMI
-            \ <Esc>:call dn#md_utils#panzerMetadata(g:dn_true)<CR>
+            \ <Esc>:call dn#md_utils#panzerifyMetadata(g:dn_true)<CR>
 if !hasmapto('<Plug>DnPMN')
     nmap <buffer> <unique> <LocalLeader>pm <Plug>DnPMN
 endif
 nmap <buffer> <unique> <Plug>DnPMN
-            \ :call dn#md_utils#panzerMetadata()<CR>
-
-" \mb : add markdown boilerplate    {{{2
-if !hasmapto('<Plug>DnMBI')
-    imap <buffer> <unique> <LocalLeader>mb <Plug>DnMBI
-endif
-imap <buffer> <unique> <Plug>DnMBI
-            \ <Esc>:call dn#md_utils#panzerify(g:dn_true)<CR>
-if !hasmapto('<Plug>DnMBN')
-    nmap <buffer> <unique> <LocalLeader>mb <Plug>DnMBN
-endif
-nmap <buffer> <unique> <Plug>DnMBN
-            \ :call dn#md_utils#panzerify()<CR>
+            \ :call dn#md_utils#panzerifyMetadata()<CR>
 
 " Commands    {{{1
 
-" MUMetadata : convert yaml metadata block to use panzer    {{{2
-command! -buffer MUMetadata
-            \ call dn#md_utils#panzerMetadata()
+" MUAddBoilerplate : add yaml metadata block and references boilerplate    {{{2
+command! -buffer MUAddBoilerplate
+            \ call dn#md_utils#addBoilerplate()
+
+" MUPanzerifyMetadata : convert yaml metadata block to use panzer    {{{2
+command! -buffer MUPanzerifyMetadata
+            \ call dn#md_utils#panzerifyMetadata()
 
 " Restore cpoptions    {{{1
 let &cpoptions = s:save_cpo

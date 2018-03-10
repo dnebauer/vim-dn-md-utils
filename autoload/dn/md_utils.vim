@@ -29,12 +29,12 @@ let s:refs = [
 
 " Public functions    {{{1
 
-" dn#md_utils#panzerMetadata([insert])    {{{2
+" dn#md_utils#panzerifyMetadata([insert])    {{{2
 " does:   convert yaml metadata block to use panzer
 " params: insert - whether entered from insert mode
 "                  [default=<false>, optional, boolean]
 " return: nil
-function! dn#md_utils#panzerMetadata(...) abort
+function! dn#md_utils#panzerifyMetadata(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:_utils_missing() | return | endif  " requires dn-utils plugin
@@ -92,12 +92,12 @@ function! dn#md_utils#panzerMetadata(...) abort
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
-" dn#md_utils#panzerify([insert])    {{{2
+" dn#md_utils#addBoilerplate([insert])    {{{2
 " does:   add panzer/markdown boilerplate to top and bottom of file
 " params: insert - whether entered from insert mode
 "                  [default=<false>, optional, boolean]
 " return: nil
-function! dn#md_utils#panzerify(...) abort
+function! dn#md_utils#addBoilerplate(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:_utils_missing() | return | endif  " requires dn-utils plugin
@@ -145,4 +145,3 @@ let &cpoptions = s:save_cpo
 unlet s:save_cpo    " }}}1
 
 " vim: set foldmethod=marker :
-            \ ]

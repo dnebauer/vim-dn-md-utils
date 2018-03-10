@@ -1,54 +1,38 @@
-*dn-markdown-ftplugin.txt*	For Vim version 7.4	Last change: 2017 July 24
+*dn-md-utils-ftplugin.txt*	For Vim version 7.4	Last change: 2017 July 24
 
-Filetype plugin for markdown                         *dn-markdown-ftplugin*
-                                                     *dn-markdown-contents*
-1.  Contents          |dn-markdown-contents|
-1.  Overview          |dn-markdown-overview|
-2.  Dependencies      |dn-markdown-dependencies|
-3.  Output            |dn-markdown-output|
-4.  Viewing           |dn-markdown-view|
-5.  Settings          |dn-markdown-settings|
-6.  Editing           |dn-markdown-editing|
+Filetype plugin for markdown                         *dn-md-utils-ftplugin*
+                                                     *dn-md-utils-contents*
+1.  Overview          |dn-md-utils-overview|
+2.  Dependencies      |dn-md-utils-dependencies|
+3.  Metadata          |dn-md-utils-metadata|
 
 =========================================================================
-1. Overview                                          *dn-markdown-overview*
+1. Overview                                          *dn-md-utils-overview*
 
-An auxiliary filetype plugin for the markdown language focussed on
-generating output in various formats:
-    ConTeXt (tex)
-    DocBook (xml)
-    Electronic publication (epub)
-    HyperText Markup Language (html)
-    Kindle Format 8 (azw3)
-    LaTeX (tex)
-    Microsoft Word (docx)
-    Mobipocket e-book (mobi)
-    OpenDocument Text (odt)
-    Portable Document Format (pdf)
+An auxiliary filetype plugin for the markdown language.
 
-This ftplugin also provides limited support for viewing output. See
-|dn-markdown-view| for details.
+Previously the plugin author used a personal plugin to provide markdown-
+related functionality. That plugin was retired when the plugin author
+switched to the |vim-pandoc| plugin and panzer framework
+(https://github.com/msprev/panzer) for markdown support.
 
-This ftplugin supports only windows and *nix operating systems.
-
-All functions in this library are global. They all begin with
-"dn#markdown#" to try and avoid namespace collisions.
-
-Some commands and mappings are also provided.
+This plugin is intended to address any gaps in markdown support provided
+by those tools. It currently provides support for a pandoc-compliant
+yaml-metadata block at the top of a document (with links collected at the
+bottom of a document) using panzer styles.
 
 =========================================================================
-2. Dependencies                                  *dn-markdown-dependencies*
+2. Dependencies                                  *dn-md-utils-dependencies*
 
-This ftplugin depends on the |dn-utils-plugin|. As well as using several
-of the functions provided by the library, this ftplugin uses the
-|g:dn-true| and |g:dn-false| variables provided by the |dn-utils-plugin|.
 
-                                                         *dn-markdown-help*
+                                                         *dn-md-utils-help*
 This ftplugin contributes to the |dn-utils-plugin| help system (see
 |dn#util#help()| for details). In the help system navigate to:
 vim -> markdown ftplugin.
-                                                       *dn-markdown-pandoc*
+                                    *dn-md-utils-pandoc* *dn-md-utils-panzer*
 Pandoc is used to generate output. It is not provided by this ftplugin. 
+This ftplugin depends on the |vim-pandoc| plugin and assumes panzer
+(https://github.com/msprev/panzer) is installed and configured.
 
 This plugin is designed for use with pandoc version 2.0. At the time of
 writing this is the development branch of pandoc, while the production
@@ -56,610 +40,66 @@ version is 1.19. As the change in major version number suggests, the
 interfaces of these two versions of pandoc are incompatible. Hence, this
 plugin will not work with the current production version of pandoc.
 
-The known incompatibilities between these versions that affect this plugin are:
+The known incompatibilities between these versions that affect this
+plugin are:
 
-    feature          1.19 (production)    2.0 (development)~
-    smart            option: --smart      extension: --from=markdown+smart
-    latex engine     --latex-engine       --pdf-engine
-
-                                                          *dn-markdown-pdf*
-PDF output can be generated via context, html or latex. The html method
-requires that wkhtmltopdf be installed. Use of the context and latex
-methods requires that context and latex, respectively, be installed. None
-of these programs are provided by this ftplugin. The latex engine used
-can be xelatex (default), lualatex or pdflatex.
-
-Each pdf generation method (context, html and latex, and xelatex,
-lualatex and pdflatex) produces an output file with the same name, so use
-of any pdf generation method will overwrite earlier pdf output generated
-by any method.
-
-                      *dn-markdown-ebook* *dn-markdown-azw3* *dn-markdown-mobi*
-Mobipocket (mobi) and Kindle Format 8 (azw3) output is generated from
-ePub output using "ebook-convert". This program is the command-line
-executable provided as part of the Calibre application suite (see
-https://calibre-ebook.com/) in debian linux and other linux
-distributions. It may have different names in other operating systems and
-linux distributions. The program ebook-convert (or its equivalent) is not
-provided by this ftplugin.
-
-                                                   *dn-markdown-buttondown*
-This ftplugin contains a default stylesheet located in the
-"vim-dn-markdown-css" subdirectory of this ftplugin. The stylesheet
-("buttondown.css") is incorporated into html output. This file is a thin
-wrapping of Ryan Gray's buttondown css stylesheet hosted at
-https://github.com/ryangray/buttondown.
+    feature         1.19 (production)   2.0 (development)~
+    smart           option: --smart     extension: --from=markdown+smart
+    latex engine    --latex-engine      --pdf-engine
 
 =========================================================================
-3. Output                                              *dn-markdown-output*
+3. Metadata                                          *dn-md-utils-metadata*
 
-Markdown files can be output as azw3, context, docbook, docx, epub, html,
-latex, mobi, odt or pdf. In each case an output file is created in the
-current directory with the same basename as the markdown file, and an
-appropriate extension. The ftplugin will overwrite existing output files
-without notifying the user, although the operating system may refuse to
-do so under some circumstances.
+Pandoc-flavoured markdown uses a yaml-style metadata block at the top of
+the file to specify values used by pandoc for document processing. With
+panzer (https://github.com/msprev/panzer) installed the metadata block
+can also specify panzer-related values which, in turn, specify values
+used by pandoc for document processing.
 
-                                                   *dn#markdown#generate()*
-Output is generated by calling the dn#markdown#generate() function. It
-takes a single |Dict| parameter that can have the following entries:
+This ftplugin assumes the following default yaml-metadata block is used
+at the top of documents:
+>
+    ---
+    title:  "[][source]"
+    author: "[][author]"
+    date:   ""
+    style:  [Standard, Latex12pt]  # panzer: 8-12,14,17,20pt; PaginateSections
+    ---
+<
+The reference-style links are defined at the end of the document. The
+default boilerplate for this is:
+>
+    [comment]: # (URLs)
+    
+       [author]: 
+    
+       [source]: 
+<
+                                             *dn#md_utils#addBoilerplate()*
+                                     *dn-md-utils-command-MUAddBoilerplate*
+                                                   *dn-md-utils-mapping-ab*
+The default metadata block and reference link definitions are added to a
+document by the function |dn#md_utils#addBoilerplate()|. This function adds
+metadata boilerplate to the top of the document and reference link
+boilerplate to the bottom of the document. It takes a single boolean
+parameter indicating whether the function was called from |Insert-mode|.
 
-    key      value    default  use~
-    insert   boolean  false    whether called from insert mode
-    formats  string   none     whitespace-separated list of one or more of
-                               these format codes: azw3, context, docbook,
-                               docx, epub, html, latex, mobi, odt,
-                               pdf_context, pdf_html, pdf_latex
-
-If no formats are provided as a parameter Dict entry, the user selects
-output formats from a menu.
-
-                                           *dn-markdown-command-MDGenerate*
-The |dn#markdown#generate()| function can be called using the :MDGenerate
-command. A whitespace-separated list of formats can be provided as an
-optional command parameter.
-
-                                                   *dn-markdown-mapping-og*
-The |dn#markdown#generate()| function can be called using the mapping
-"<Leader>og" from either |Insert-mode| or |Normal-mode|. The default
+The |dn#md_utils#addBoilerplate()| function can be called using the
+`:MUAddBoilerplate` command. The function can also be called using the
+mapping "<Leader>ab" from either |Insert-mode| or |Normal-mode|. The default
 |mapleader| is a backslash.
 
-                 *dn-markdown-pandoc-extensions* *dn-markdown-pandoc-options*
-The pandoc options and extensions used in output generation are listed
-below. Options are indicated by "--" notation and extensions by "+"
-notation. Those affected by ftplugin settings and user variables are
-indicated with an asterisk (*) -- see |dn-markdown-settings| for more
-details on these options.
-
-    context:
-          +smart +footnotes +inline_notes --standalone
-          --filter pandoc-citeproc* --template=?*
-          --variable fontsize=?* --variable linkcolor=?*
-          --variable papersize=?*
-
-    docbook:
-          +footnotes +inline_notes --standalone
-          --filter pandoc-citeproc* --template=?*
-
-    docx: +smart +footnotes +inline_notes --standalone
-          --filter pandoc-citeproc* --reference-docx=?* --template=?*
-
-    epub: --epub-cover-image=cover.{gif,jpg,png} +smart +footnotes
-          +inline_notes  --standalone --epub-stylesheet=?*
-          --filter pandoc-citeproc* --template=?*
-
-          note: option --epub-cover-image uses the file
-                "cover.{gif,jpg,png}" if present in |getcwd()|; if
-                multiple matches are available, ftplugin prefers png
-                over jpg over gif
-
-    html: --self-contained +smart +footnotes +inline_notes
-          --standalone --css=?* --filter pandoc-citeproc*
-          --template=?*
-
-    latex:
-          +smart +footnotes +inline_notes --standalone
-          --filter pandoc-citeproc* --pdf-engine=?* --template=?*
-          --variable fontsize=?* --variable citecolor=?*
-          --variable linkcolor=?* --variable toccolor=?*
-          --variable urlcolor=?* --variable papersize=?*
-
-    pdf (via context): as per context
-
-    pdf (via html): as per html
-
-    pdf (via latex): as per latex
-
-                                       *dn-markdown-pandoc-post-processing*
-In some cases pandoc output is further converted to additional formats.
-In these cases the intermediate output file does not overwrite existing
-output of the same format, and is deleted once the final output file is
-created.
-
-Currently post-processing is done to pandoc's epub output to generate
-azw3 and mobi output. The intermediate epub output will not overwrite an
-existing epub output file.
-
-                                                 *dn#markdown#regenerate()*
-All output files generated in the current editing session can be
-regenerated by calling the dn#markdown#regenerate() function. It takes a
-single boolean parameter indicating whether the function was called from
-|Insert-mode|.
-
-                                         *dn-markdown-command-MDRegenerate*
-The |dn#markdown#regenerate()| function can be called using the
-:MDRegenerate command.
-
-                                                   *dn-markdown-mapping-or*
-The |dn#markdown#regenerate()| function can be called using the mapping
-"<Leader>or" from either |Insert-mode| or |Normal-mode|. The default
-|mapleader| is a backslash.
-
-=========================================================================
-4. Viewing                                               *dn-markdown-view*
-                                                       *dn#markdown#view()*
-Output files can be opened for viewing in the default application defined
-for that file type. On windows systems the operating system handles file
-associations. On *nix systems the ftplugin uses the freedesktop.org
-utility "xdg-open" to open output files. What happens when output files
-are regenerated, or the ftplugin attempts to open for viewing an output
-file that is already open in the associated viewing application, depends
-on the viewing application and operating system. There are a number of
-vim markdown plugins available that provide near-realtime preview html
-output in a web browser. Some examples are:
-    https://github.com/suan/vim-instant-markdown
-    https://github.com/kannokanno/previm
-    https://github.com/iamcco/markdown-preview.vim
-
-Output is viewed by calling the dn#markdown#view() function. It takes
-a single |Dict| parameter that can have the following entries:
-
-    key      value    default  use~
-    insert   boolean  false    whether called from insert mode
-    formats  string   none     whitespace-separated list of one or more of
-                               these format codes: azw3, context, docbook,
-                               docx, epub, html, latex, mobi, odt,
-                               pdf_context, pdf_html, pdf_latex
-
-If no formats are provided as a parameter Dict entry, the user selects
-output formats from a menu.
-
-The specified output files are (re)generated before being opened for
-viewing.
-
-                                               *dn-markdown-command-MDView*
-The |dn#markdown#view()| function can be called using the :MDView command.
-Formats can be provided as an optional command parameter.
-
-                                                   *dn-markdown-mapping-ov*
-The |dn#markdown#view()| function can be called using the mapping
-"<Leader>ov" from either |Insert-mode| or |Normal-mode|. The default
-|mapleader| is a backslash.
-
-=========================================================================
-5. Settings                                          *dn-markdown-settings*
-                                                   *dn#markdown#settings()*
-Two plugin settings are used to specify the names of the pandoc and
-ebook-convert (see |dn-markdown-ebook|) executables. This is because they
-may have different names in different operating systems and/or
-distributions. All other settings affect pandoc options used in output
-generation.
-
-All pandoc options used in output generation are listed in
-|dn-markdown-pandoc-options|. Those marked with an asterisk are affected
-by a corresponding ftplugin setting. Each ftplugin setting has a default
-value. Each ftplugin has a corresponding global configuration variable
-which can be set by the user, for example, in |vimrc|. These variables
-override the default value. (These user configuration variables are read
-once, when the ftplugin is loaded, so they must be set in |vimrc| before
-this ftplugin is loaded.) All ftplugin settings, except for those that
-take effect at plugin initialisation, can be altered by calling the
-|dn#markdown#settings()| function. This function enables the user to
-select a setting from a series of menus; once selected the setting can
-be altered by selecting from a series of alternative values or by
-directly entering the value.
-
-In summary then, there are three ways to assign a value to a setting:
-    - a default value; which can be overridden by...
-    - a user configuration variable; which can be overridden by...
-    - manually setting the variable using dn#markdown#settings()
-
-                                           *dn-markdown-command-MDSettings*
-The |dn#markdown#settings()| function can be called using the :MDSettings
-command. A format can be provided as an optional command parameter.
-
-                                                   *dn-markdown-mapping-se*
-The |dn#markdown#settings()| function can be called using the mapping
-"<Leader>se" from either |Insert-mode| or |Normal-mode|. The default
-|mapleader| is a backslash.
-
-The two executables that can be affected by ftplugin settings are listed
-here, with the corresponding user configuration variable, allowable
-values, the default value, and the settings menu option that alters the
-setting.
-
-    pandoc
-        variable: g:DN_markdown_exe_pandoc
-         allowed: valid executable file
-         default: pandoc
-            menu: Converters > pandoc
-
-    ebook-convert
-        variable: g:DN_markdown_exe_ebook_convert
-         allowed: valid executable file
-         default: ebook-convert
-            menu: Converters > ebook-convert
-
-One setting determines whether equation, figure and table references are
-checked for correctness at startup. (See |dn#markdown#refsCheck()| for
-details). This setting can not be changed using the settings menu because
-the setting has its effect before the settings menu can be called. Here is
-the corresponding user configuration variable and default value for this
-setting.
-
-        variable: g:DN_markdown_number_start_check
-         allowed: boolean
-         default: 1
-
-Here is a list of each pandoc option and extension affected by ftplugin
-settings, the corresponding user configuration variable, allowable
-values, the default value, and the settings menu option that alters the
-setting. Options are indicated by "--" notation and extensions by "+"
-notation.
-
-    --css=?
-        variable: g:DN_markdown_stylesheet_html
-         allowed: valid file path or url
-         default: see |dn-markdown-buttondown|
-            menu: Stylesheet file > Stylesheet (html)
-            note: although pandoc allows more than one stylesheet to be
-                  specified, this ftplugin only accommodates one
-
-    --epub-stylesheet=?
-        variable: g:DN_markdown_stylesheet_epub
-         allowed: valid file path or url
-         default: none
-            menu: Stylesheet file > Stylesheet (epub)
-
-    --filter pandoc-citeproc
-        variable: g:DN_markdown_citeproc_all
-         allowed: boolean (whether this option is used or not)
-         default: false
-            menu: Citeproc (all formats)
-
-    --filter pandoc-eqnos
-        variable: g:DN_markdown_number_equations
-         allowed: boolean (whether this option is used or not)
-         default: true
-            menu: Number crossreferences (all formats) > Equations
-            note: requires installation of pandoc-eqnos filter
-                  (see https://github.com/tomduck/pandoc-eqnos)
-
-    --filter pandoc-fignos
-        variable: g:DN_markdown_number_figures
-         allowed: boolean (whether this option is used or not)
-         default: true
-            menu: Number crossreferences (all formats) > Figures
-            note: requires installation of pandoc-fignos filter
-                  (see https://github.com/tomduck/pandoc-fignos)
-
-    --filter pandoc-tablenos
-        variable: g:DN_markdown_number_tables
-         allowed: boolean (whether this option is used or not)
-         default: true
-            menu: Number crossreferences (all formats) > Tables
-            note: requires installation of pandoc-eqnos filter
-                  (see https://github.com/tomduck/pandoc-tablenos)
-
-    --pdf-engine=?
-        variable: g:DN_markdown_pdfengine_print
-         allowed: xelatex, lualatex, pdflatex
-         default: xelatex
-            menu: Print only > PDF engine (pdf)
-
-    --reference-docx=?
-        variable: g:DN_markdown_stylesheet_docx
-         allowed: valid file path or url
-         default: none
-            menu: Stylesheet file > Stylesheet (docx)
-
-    --template=?
-        variable: g:DN_markdown_template_FORMAT
-                  where FORMAT is one of: azw3, context, docbook, docx,
-                                          epub, html, latex, mobi, odt,
-                                          pdf_context, pdf_html,
-                                          pdf_latex
-         allowed: valid file path or url,
-                  or
-                  name of file located in pandoc's user data directory,
-                  or
-                  base name of file located in pandoc's user data
-                  directory provided it has the right extension
-                  (see notes below and pandoc help for more details)
-         default: pandoc default template
-            menu: Template file > Template (FORMAT)
-                  where FORMAT is one of: azw3 via epub, context,
-                                          docbook, docx, epub, html,
-                                          latex, mobi via epub, odt,
-                                          pdf via context, pdf via html,
-                                          pdf via latex
-            note: this can be set for separately for each output format
-            note: three possible templates can be defined for pdf
-                  generation; in context, html or latex formats, each
-                  corresponding to a method of pdf generation
-            note: the custom context, html and latex formatted templates
-                  for pdf generation are specified separately to the
-                  custom templates for context, html and latex output;
-                  this means that if a custom template is specified for
-                  latex output it will not be used for pdf generation via
-                  latex unless the same template is separately specified
-                  for pdf generation via latex
-            note: the templates for azw3 and mobi format output are each
-                  used for generating an intermediate epub output file
-                  from which the final output file is generated, but
-                  neither of these templates is used when generating epub
-                  output; the epub template is specified separately,
-                  meaning, for example, that if you specify a custom epub
-                  template it will have no effect on azw3 or mobi output
-                  files  
-            note: when looking in the user data directory for a template
-                  matching a provided base name (i.e., no extension),
-                  these are the extensions pandoc looks for in each format:
-
-                      format      extension~
-                      azw3        epub3 (because epub is intermediate format)
-                      context     context
-                      docbook     docbook5
-                      docx        docx
-                      epub        epub3
-                      html        html5
-                      latex       latex
-                      mobi        epub3 (because epub is intermediate format)
-                      odt         odt
-                      pdf_context context
-                      pdf_html    html5
-                      pdf_latex   latex
-
-                  There are some extensions used by multiple formats
-                  (e.g., "epub3" used by azw3, epub and mobi; "context"
-                  used by context and pdf_context; "html5" used by html
-                  and pdf_html; and "latex" used by latex and pdf_latex).
-                  In these cases it may be convenient to use a single
-                  template file for multiple formats and specify it using
-                  the same base name. To specify different template files
-                  for the same formats it would be necessary to refer to
-                  them by their unique file names or paths.
-
-    --variable fontsize=?
-        variable: g:DN_markdown_fontsize_print
-         allowed: 11, 12, 13, 14
-         default: depends on template in use
-            menu: Print only > Font size (paper)
-
-    --variable citecolor=?
-        variable: g:DN_markdown_linkcolor_print
-         allowed: black, blue, cyan, darkgray, gray, green,
-                  lightgray, magenta, red, yellow
-         default: gray
-            menu: Print only > Link colour (paper)
-
-    --variable linkcolor=?
-        as for "--variable citecolor=?" above
-
-    --variable toccolor=?
-        as for "--variable citecolor=?" above
-
-    --variable urlcolor=?
-        as for "--variable citecolor=?" above
-
-    --variable papersize=?
-        variable: g:DN_markdown_papersize_print
-         allowed: a4, letter
-         default: a4
-            menu: Print only > Paper size (print)
-
-=========================================================================
-5. Editing                                            *dn-markdown-editing*
-
-This plugin provides limited support for editing markdown.
-
-                                             *dn#markdown#equationInsert()*
-An equation label can be inserted by calling the
-dn#markdown#equationInsert() function. The user enters the equation id.
-The equation label is created from the equation id according to the
-schema used by the pandoc-eqnos filter (see |dn-markdown-id|,
-|dn-markdown-label| and https://github.com/tomduck/pandoc-eqnos) and
-inserted at the cursor location. Equation ids must be unique among all
-equations in a given file.
-
-                                               *dn#markdown#figureInsert()*
-A figure can be inserted by calling the dn#markdown#figureInsert()
-function. The user enters the figure caption, figure id and image file
-path. The figure is inserted following the current line. The figure label
-is created from the figure id according to the schema used by the
-pandoc-fignos filter (see |dn-markdown-id|, |dn-markdown-label| and
-https://github.com/tomduck/pandoc-fignos). Each figure id must be unique
-among all figures in a given file. The image file path is inserted
-exactly as entered, without expansion or conversion to an absolute path;
-but tab expansion is available when entering the path.
-
-                                             *dn#markdown#footnoteInsert()*
-A footnote can be inserted by calling the dn#markdown#footnoteInsert()
-function. The user enters the footnote id and footnote text. The footnote
-is inserted following the current line. Each footnote id must be unique
-among all footnotes in a given file. This function creates a reference
-footnote. While this filetype plugin supports inline footnotes in output
-generation, it provides no support for inserting them.
-
-                                                 *dn#markdown#linkInsert()*
-A url hyperlink can be inserted by calling the dn#markdown#linkInsert()
-function. The user enters the hyperlink id and url. The hyperlink is
-inserted following the current line. Each hyperlink id must be unique
-among all hyperlinks in a given file. This function creates a reference
-hyperlink. While this filetype plugin supports inline, automatic,
-shortcut and internal hyperlinks in output generation, it provides no
-support for inserting them.
-
-                                                *dn#markdown#tableInsert()*
-A table title (label, caption and label) can be inserted by calling the
-dn#markdown#tableInsert() function. The user enters the table caption and
-table id. The table title is inserted following the current line. The
-table label is created from the table id according to the schema used by
-the pandoc-tablenos filter (see |dn-markdown-id|, |dn-markdown-label| and
-https://github.com/tomduck/pandoc-tablenos). Table ids must be unique
-among all tables in a given file.
-
-                                     *dn-markdown-command-MDEquationInsert*
-                                       *dn-markdown-command-MDFigureInsert*
-                                     *dn-markdown-command-MDFootnoteInsert*
-                                         *dn-markdown-command-MDLinkInsert*
-                                        *dn-markdown-command-MDTableInsert*
-The |dn#markdown#equationInsert()| function can be called using the
-:MDEquationInsert command. The |dn#markdown#figureInsert()| function can
-be called using the :MDFigureInsert command. The
-|dn#markdown#footnoteInsert()| function can be called using the
-:MDFootnoteInsert command. The |dn#markdown#linkInsert()| function can be
-called using the :MDLinkInsert command. The |dn#markdown#tableInsert()|
-function can be called using the :MDTableInsert command.
-
-                            *dn-markdown-mapping-ei* *dn-markdown-mapping-fi*
-                            *dn-markdown-mapping-ni* *dn-markdown-mapping-li*
-                                                   *dn-markdown-mapping-ti*
-The |dn#markdown#equationInsert()| function can be called using the mapping
-"<Leader>ei". The |dn#markdown#figureInsert()| function can be called using
-the mapping "<Leader>fi". The |dn#markdown#footnoteInsert()| function can
-be called using the mapping "<Leader>ni". The |dn#markdown#linkInsert()|
-function can be called using the mapping "<Leader>li". The
-|dn#markdown#tableInsert()| function can be called using the mapping
-"<Leader>ti".
-
-All five functions can be called from either |Insert-mode| or |Normal-mode|.
-The default |mapleader| is a backslash.
-
-                                                    *dn-markdown-reference*
-                                         *dn-markdown-id* *dn-markdown-label*
-This ftplugin supports the use of numbering and referencing equations,
-figures and tables using the schemas supported by the pandoc-eqnos
-(https://github.com/tomduck/pandoc-eqnos), pandoc-fignos 
-(https://github.com/tomduck/pandoc-fignos) and pandoc-tablenos
-(https://github.com/tomduck/pandoc-tablenos) filters.
-
-Each equation, figure and table is given a label. A label has the form
-"{#PREFIX:ID}", where prefix is "eq" for equations, "fig" for figures and
-"tbl" for tables. Ids must be lower case; more precisely, ids can consist
-only of 'a-z', '0-9', '_' and '-'.)
-
-Each equation label follows the equation:
-    $$ y = mx + b $$ {#eq:id}
-Each figure label follows the figure definition:
-    ![Caption.](image.png){#fig:id}
-Each table label follows the table caption:
-    Table: Caption. {#tbl:id}
-
-The |dn#markdown#equationInsert()| function gets user input for id and
-inserts the equation label at the cursor location. The
-|dn#markdown#figureInsert()| function gets user input for caption, image
-filepath and id, and inserts the entire figure definition, including
-label, on the following line. The |dn#markdown#tableInsert()| function gets
-user input for caption and id, and inserts the entire table title on the
-following line.
-
-A reference to an existing equation, figure or table has the form
-"{@PREFIX:ID}" where the prefix is the same as for equation, figure and
-table labels ("eq", "fig" and "tbl", respectively), and the id is that
-used for the corresponding equation, figure or table.
-
-Footnotes and hyperlinks have a slighly different syntax, though ids have the
-same format. Each footnote and hyperlink requires an entire line. A footnote
-has the structure:
-    [^id]: Content of footnote
-A hyperlink has the structure:
-    [id]: url
-A reference to the hyperlink has the structure "[id]" and is used in defining
-a hyperlink in text: "[anchor][id]". A reference to a footnote is added to
-text with "[^id]".
-
-                                                  *dn#markdown#idsUpdate()*
-Lists of ids are built when the ftplugin initialises. There is a separate
-list for  each of equations, figures, footnotes, links and tables. The
-corresponding list of ids is updated whenever a new id is added by the
-|dn#markdown#equationInsert()|, |dn#markdown#figureInsert()|,
-|dn#markdown#footnoteInsert()|, |dn#markdown#linkInsert()| and
-|dn#markdown#tableInsert()| functions. The id lists can be updated at any
-time by calling the dn#markdown#idsUpdate() function.
-
-                                          *dn-markdown-command-MDUpdateIDs*
-The |dn#markdown#idsUpdate()| function can be called using the :MDUpdateIDs
-command.
-                                                   *dn-markdown-mapping-iu*
-The |dn#markdown#idsUpdate()| function can be called using the mapping
-"<Leader>iu" from either |Insert-mode| or |Normal-mode|. The default
-|mapleader| is a backslash.
-                                                  *dn#markdown#refInsert()*
-To insert a reference to an existing equation, figure, footnote,
-hyperlink or table, use the dn#markdown#refInsert() function with the
-argument "equation", "figure", "footnote", "link" or "table",
-respectively. The function requires the user to enter the id of the
-target equation, figure, footnote, hyperlink or table using tab
-completion.
-
-                                  *dn-markdown-command-MDEquationReference*
-                                    *dn-markdown-command-MDFigureReference*
-                                  *dn-markdown-command-MDFootnoteReference*
-                                      *dn-markdown-command-MDLinkReference*
-                                     *dn-markdown-command-MDTableReference*
-The :MDEquationReference command calls the |dn#markdown#refInsert()|
-function with argument "equation" to insert an equation reference. The
-:MDFigureReference command calls the |dn#markdown#refInsert()| function
-with argument "figure" to insert a figure reference. The
-:MDFootnoteReference command calls the |dn#markdown#refInsert()| function
-with argument "footnote" to insert a footnote reference. The
-:MDLinkReference command calls the |dn#markdown#refInsert()| function with
-argument "link" to insert a hyperlink reference. The :MDTableReference
-command calls the |dn#markdown#refInsert()| function with argument "table"
-to insert a table reference.
-
-                            *dn-markdown-mapping-er* *dn-markdown-mapping-fr*
-                            *dn-markdown-mapping-lr* *dn-markdown-mapping-nr*
-                                                   *dn-markdown-mapping-tr*
-The mapping "<Leader>er" calls the |dn#markdown#refInsert()| function with
-argument "equation" to insert an equation reference. The mapping
-"<Leader>fr" calls the |dn#markdown#refInsert()| function with argument
-"figure" to insert a figure reference. TThe mapping "<Leader>lr" calls
-the |dn#markdown#refInsert()| function with argument "link" to insert a
-hyperlink reference. TThe mapping "<Leader>nr" calls the
-|dn#markdown#refInsert()| function with argument "footnote" to insert a
-footnote reference. The mapping "<Leader>tr" calls the
-|dn#markdown#refInsert()| function with argument "table" to insert a table
-reference.
-
-All five mappings can be called from either |Insert-mode| or |Normal-mode|.
-The default |mapleader| is a backslash.
-
-                                                  *dn#markdown#refsCheck()*
-Use the dn#markdown#refsCheck() function to check equation, figure, footnote, hyperlink and
-table definitions, and references to them. The following conditions will
-be reported as warnings:
-    an equation, figure, footnote, hyperlink or table is not referenced
-    an equation, figure, hyperlink or table is referenced multiple times
-
-The following conditions are reported as errors:
-    a reference is made to an equation, figure or table that is not defined
-    an equation, figure or table is defined more than once
-    a footnote is referenced multiple times
-
-This function is run automatically when the plugin is loaded, i.e., when
-a markdown file is loaded into the buffer. When run at initialisation the
-function reports warnings and errors, but does not print any other
-messages.
-
-                                    *dn-markdown-command-MDCheckReferences*
-The |dn#markdown#refsCheck()| function can be called using the
-:MDCheckReferences command.
-
-                                                   *dn-markdown-mapping-rc*
-The |dn#markdown#refsCheck()| function can be called using the mapping
-"<Leader>rc" from either |Insert-mode| or |Normal-mode|. The default
+                                          *dn#md_utils#panzerifyMetadata()*
+                                  *dn-md-utils-command-MUPanzerifyMetadata*
+                                                   *dn-md-utils-mapping-pm*
+Previously created markdown files have yaml metadata blocks that do not
+use panzer. Those metadata blocks can be "panzerified" using the
+|dn#md_utils#panzerifyMetadata()| function. It takes a single boolean
+parameter indicating whether the function was called from |Insert-mode|.
+
+The |dn#md_utils#panzerifyMetadata()| function can be called using the
+`:MUPanzerifyMetadata` command. The function can also be called using the
+mapping "<Leader>pm" from either |Insert-mode| or |Normal-mode|. The default
 |mapleader| is a backslash.
 
 =========================================================================
