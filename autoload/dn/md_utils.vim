@@ -186,24 +186,24 @@ function! s:_insert_figure() abort
     endwhile
     " get (optional) attributes
     let l:attributes = []
-    let l:attribute = 'width'
-    let l:value = '50%'
+    let l:name_default = 'width'
+    let l:value_default = '50%'
     while 1
         " get attribute name
         let l:prompt = 'Enter attribute name (empty to abort): '
-        let l:attr = input(l:prompt, l:attribute)
+        let l:name = input(l:prompt, l:name_default)
         echo ' '  | " ensure move to a new line
-        if empty(l:id) | break | endif  " finished entering attributes
+        if empty(l:name) | break | endif  " finished entering attributes
         " get attribute value
         let l:prompt = 'Enter attribute value (empty to abort): '
-        let l:attr = input(l:prompt, l:value)
+        let l:value = input(l:prompt, l:value_default)
         echo ' '  | " ensure move to a new line
-        if empty(l:id) | break | endif  " finished entering attributes
+        if empty(l:value) | break | endif  " finished entering attributes
         " add attribute
-        call add(l:attributes, l:attribute . '="' . l:value . '"')
+        call add(l:attributes, l:name . '="' . l:value . '"')
         " only suggest for first attribute
-        let l:attribute = ''
-        let l:value = ''
+        let l:name_default = ''
+        let l:value_default = ''
     endwhile
     " assemble link and link definition
     let l:attrs_str = ''
