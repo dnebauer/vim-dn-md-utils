@@ -228,7 +228,7 @@ function! s:_insert_figure() abort
     " insert link definition
     call cursor(line('$'), 0)
     let l:lines = ['', l:defn]
-    for l:line in reverse(l:line)  " link and two empty lines
+    for l:line in reverse(l:lines)  " link and two empty lines
         let l:failed = append(line('.'), l:line)
         if l:failed
             let l:msg = 'Error occurred while inserting link definition'
