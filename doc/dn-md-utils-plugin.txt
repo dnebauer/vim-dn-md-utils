@@ -5,6 +5,7 @@ Filetype plugin for markdown                         *dn-md-utils-ftplugin*
 1.  Overview          |dn-md-utils-overview|
 2.  Dependencies      |dn-md-utils-dependencies|
 3.  Metadata          |dn-md-utils-metadata|
+4.  Images            |dn-md-utils-images|
 
 =========================================================================
 1. Overview                                          *dn-md-utils-overview*
@@ -100,6 +101,40 @@ parameter indicating whether the function was called from |Insert-mode|.
 The |dn#md_utils#panzerifyMetadata()| function can be called using the
 `:MUPanzerifyMetadata` command. The function can also be called using the
 mapping "<Leader>pm" from either |Insert-mode| or |Normal-mode|. The default
+|mapleader| is a backslash.
+
+=========================================================================
+4. Images                         *dn-md-utils-figures*  *dn-md-utils-images*
+
+A helper function, mapping and command are provided to assist with adding
+figures. They assume the images are defined using reference links with
+optional attributes, and that all reference links are added to the end of
+the document prefixed with three spaces. For example:
+
+    See @fig:display and {@fig:packed}.
+
+    ![Tuck boxes displayed][display]
+
+    ![Tuck boxes packed away][packed]
+
+    [comment]: # (URLs)
+
+       [display]: resources/displayed.png "Tuck boxes displayed"
+       {#fig:display .class width="50%"}
+
+       [packed]: resources/packed.png "Tuck boxes packed away"
+       {#fig:packed .class width="50%"} 
+
+                                               *dn#md_utils#insertFigure()*
+                                       *dn-md-utils-command-MUInsertFigure*
+                                                  *dn-md-utils-mapping-fig*
+A figure is inserted on the following line using the
+|dn#md_utils#insertFigure()| function. It takes a single boolean parameter
+indicating whether the function was called from |Insert-mode|.
+
+The |dn#md_utils#insertFigure()| function can be called using the
+`:MUInsertFigure` command. The function can also be called using the
+mapping "<Leader>fig" from either |Insert-mode| or |Normal-mode|. The default
 |mapleader| is a backslash.
 
 =========================================================================

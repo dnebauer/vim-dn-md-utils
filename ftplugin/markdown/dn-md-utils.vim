@@ -98,6 +98,18 @@ endif
 nmap <buffer> <unique> <Plug>DnABN
             \ :call dn#md_utils#addBoilerplate()<CR>
 
+" \fig : insert figure    {{{2
+if !hasmapto('<Plug>DnFIGI')
+    imap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGI
+endif
+imap <buffer> <unique> <Plug>DnFIGI
+            \ <Esc>:call dn#md_utils#insertFigure(g:dn_true)<CR>
+if !hasmapto('<Plug>DnFIGN')
+    nmap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGN
+endif
+nmap <buffer> <unique> <Plug>DnFIGN
+            \ :call dn#md_utils#insertFigure()<CR>
+
 " \pm : convert yaml metadata block to use panzer    {{{2
 if !hasmapto('<Plug>DnPMI')
     imap <buffer> <unique> <LocalLeader>pm <Plug>DnPMI
@@ -115,6 +127,10 @@ nmap <buffer> <unique> <Plug>DnPMN
 " MUAddBoilerplate : add yaml metadata block and references boilerplate    {{{2
 command! -buffer MUAddBoilerplate
             \ call dn#md_utils#addBoilerplate()
+
+" MUInsertFigure : insert figure    {{{2
+command! -buffer MUInsertFigure
+            \ call dn#md_utils#insertFigure()
 
 " MUPanzerifyMetadata : convert yaml metadata block to use panzer    {{{2
 command! -buffer MUPanzerifyMetadata
