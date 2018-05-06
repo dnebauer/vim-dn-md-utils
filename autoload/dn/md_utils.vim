@@ -166,7 +166,8 @@ function! s:_insert_figure() abort
     echo ' '  | " ensure move to a new line
     if empty(l:caption) | return | endif
     " get id/label
-    let l:default = substitute(l:caption, '[^a-z0-9_-]', '-', 'g')
+    let l:default = tolower(l:caption)
+    let l:default = substitute(l:default, '[^a-z0-9_-]', '-', 'g')
     let l:default = substitute(l:default, '^-\+', '', '')
     let l:default = substitute(l:default, '-\+$', '', '')
     let l:default = substitute(l:default, '-\{2,\}', '-', 'g')
