@@ -80,6 +80,10 @@ if count(g:dn_help_plugins, 'dn-md-utils') == 0
         \ '',
         \ 'add metadata boilerplate    \ab      MUAddBoilerplate',
         \ '',
+        \ 'clean output                \co      MUCleanOutput',
+        \ '',
+        \ 'insert figure               \fig     MUInsertFigure',
+        \ '',
         \ 'convert metadata to panzer  \pm      MUPanzerifyMetadata',
         \ ]
 endif
@@ -97,6 +101,18 @@ if !hasmapto('<Plug>DnABN')
 endif
 nmap <buffer> <unique> <Plug>DnABN
             \ :call dn#md_utils#addBoilerplate()<CR>
+
+" \co : clean output    {{{2
+if !hasmapto('<Plug>DnCOI')
+    imap <buffer> <unique> <LocalLeader>co <Plug>DnCOI
+endif
+imap <buffer> <unique> <Plug>DnCOI
+            \ <Esc>:call dn#md_utils#cleanOutput(g:dn_true)<CR>
+if !hasmapto('<Plug>DnCON')
+    nmap <buffer> <unique> <LocalLeader>co <Plug>DnCON
+endif
+nmap <buffer> <unique> <Plug>DnCON
+            \ :call dn#md_utils#cleanOutput()<CR>
 
 " \fig : insert figure    {{{2
 if !hasmapto('<Plug>DnFIGI')
@@ -127,6 +143,10 @@ nmap <buffer> <unique> <Plug>DnPMN
 " MUAddBoilerplate : add yaml metadata block and references boilerplate    {{{2
 command! -buffer MUAddBoilerplate
             \ call dn#md_utils#addBoilerplate()
+
+" MUCleanOutput : clean output    {{{2
+command! -buffer MUCleanOutput
+            \ call dn#md_utils#cleanOutput()
 
 " MUInsertFigure : insert figure    {{{2
 command! -buffer MUInsertFigure

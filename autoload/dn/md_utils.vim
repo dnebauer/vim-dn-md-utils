@@ -139,7 +139,97 @@ function! dn#md_utils#panzerifyMetadata(...) abort
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
+" dn#md_utils#cleanOutput([insert])    {{{2
+" does:   delete output files and temporary directories
+" params: insert - whether entered from insert mode
+"                  [default=<false>, optional, boolean]
+" return: nil
+function! dn#md_utils#cleanOutput(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:_utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    " clean output files
+    call s:_clean_output()
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
 " Private functions    {{{1
+
+" s:_clean_output()    {{{2
+" does:   deletes 'FILE.html' file, 'FILE.pdf' file and '.tmp' directory
+" params: nil
+" prints: feedback
+" return: n/a
+function! s:_clean_output() abort
+    " get path components
+    let l:fp = resolve(expand('%:p'))
+    if empty(l:fp)
+        call dn#util#error('Buffer is not a file!')
+        return
+    endif
+    let l:dir = fnamemodify(l:fp, ':h')
+    let l:file = fnamemodify(l:fp, ':t')
+    let l:base = fnamemodify(l:file, ':r')
+    " identify deletion candidates
+    let l:deletable_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
+    let l:deletable_subdirs = ['.tmp']
+    let l:fps_for_deletion = []
+    let l:dirs_for_deletion = []
+    for l:suffix in l:deletable_suffixes
+        let l:candidate = l:dir . '/' . l:base . '.' . l:suffix
+        if filereadable(l:candidate)
+            call add(l:fps_for_deletion, l:candidate)
+        endif
+    endfor
+    for l:subdir in l:deletable_subdirs
+        let l:candidate = l:dir . '/' . l:subdir
+        if isdirectory(l:candidate)
+            call add(l:dirs_for_deletion, l:candidate)
+        endif
+    endfor
+    if empty(l:fps_for_deletion) && empty(l:dirs_for_deletion)
+        call dn#util#showMsg('No output to clean up')
+        return
+    endif
+    " delete files/dirs
+    let l:deleted = []
+    let l:failed = []
+    for l:fp in l:fps_for_deletion
+        let l:result = delete(l:fp)
+        if     l:result == 0  " success
+            call add(l:deleted, fnamemodify(l:fp, ':t'))
+        elseif l:result == -1  " (partial) failure
+            call add(l:failed, l:fp)
+        else
+            " should not be possible
+            call dn#util#error('Unable to delete ' . l:fp)
+        endif
+    endfor
+    for l:dir in l:dirs_for_deletion
+        let l:result = delete(l:dir, 'rf')  " delete recursively!!
+        if     l:result == 0  " success
+            call add(l:deleted, fnamemodify(l:dir, ':t'))
+        elseif l:result == -1  " (partial) failure
+            call add(l:failed, l:dir)
+        else
+            " should not be possible
+            call dn#util#error('Unable to recursively force delete ' . l:dir)
+        endif
+    endfor
+    " report outcome
+    if !empty(l:deleted)
+        call dn#util#showMsg('Deleted ' . join(l:deleted, ', '))
+    endif
+    if !empty(l:failed)
+        call dn#util#error('Errors occurred trying to delete:')
+        for l:path in l:failed
+            call dn#util#error('- ' . l:path)
+        endfor
+    endif
+endfunction
 
 " s:_insert_figure()    {{{2
 " does:   insert figure

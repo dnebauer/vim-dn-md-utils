@@ -6,6 +6,7 @@ Filetype plugin for markdown                         *dn-md-utils-ftplugin*
 2.  Dependencies      |dn-md-utils-dependencies|
 3.  Metadata          |dn-md-utils-metadata|
 4.  Images            |dn-md-utils-images|
+5.  Output            |dn-md-utils-output|
 
 =========================================================================
 1. Overview                                          *dn-md-utils-overview*
@@ -135,6 +136,34 @@ indicating whether the function was called from |Insert-mode|.
 The |dn#md_utils#insertFigure()| function can be called using the
 `:MUInsertFigure` command. The function can also be called using the
 mapping "<Leader>fig" from either |Insert-mode| or |Normal-mode|. The default
+|mapleader| is a backslash.
+
+=========================================================================
+5. Output                                              *dn-md-utils-output* 
+
+This plugin does not assist with generation of output, but does provide a
+mapping and function for deleting output files. The term "clean" is used,
+as in the makefile keyword that deletes all working and output files.
+
+                              *dn-md-utils-clean*  *dn-md-utils-clean-output*
+Cleaning of output only occurs if the current buffer contains a file. The
+directory searched for items to delete is the directory in which the file
+in the current buffer is located.
+
+If the file being edited is FILE.ext, the files that will be deleted are:
+"FILE.htm", "FILE.html", "FILE.pdf", "FILE.mobi", and "FILE.epub". The
+subdirectory ".tmp" will also be recursively force deleted.
+
+                                                *dn#md_utils#cleanOutput()*
+                                        *dn-md-utils-command-MUCleanOutput*
+                                                   *dn-md-utils-mapping-co*
+Output files and directories are deleted using the
+|dn#md_utils#cleanOutput()| function. It takes a single boolean parameter
+indicating whether the function was called from |Insert-mode|.
+
+The |dn#md_utils#cleanOutput()| function can be called using the
+`:MUCleanOutput` command. The function can also be called using the
+mapping "<Leader>co" from either |Insert-mode| or |Normal-mode|. The default
 |mapleader| is a backslash.
 
 =========================================================================
