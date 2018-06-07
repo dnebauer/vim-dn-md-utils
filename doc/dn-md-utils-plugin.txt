@@ -154,8 +154,8 @@ If the file being edited is FILE.ext, the files that will be deleted are:
 "FILE.htm", "FILE.html", "FILE.pdf", "FILE.mobi", and "FILE.epub". The
 subdirectory ".tmp" will also be recursively force deleted.
 
-WARNING: This plugin does not check that it is safe to delete to files
-and directories identified for deletion. For example, it does not check
+WARNING: This plugin does not check that it is safe to delete files and
+directories identified for deletion. For example, it does not check
 whether any of them are symlinks to other locations. Also be aware that
 directories are forcible and recursively deleted, as with the *nix shell
 command "rm -fr".
