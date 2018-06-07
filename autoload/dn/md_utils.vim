@@ -191,7 +191,7 @@ function! s:_clean_output() abort
         endif
     endfor
     if empty(l:fps_for_deletion) && empty(l:dirs_for_deletion)
-        call dn#util#showMsg('No output to clean up')
+        echo 'No output to clean up'
         return
     endif
     " delete files/dirs
@@ -221,7 +221,7 @@ function! s:_clean_output() abort
     endfor
     " report outcome
     if !empty(l:deleted)
-        call dn#util#showMsg('Deleted ' . join(l:deleted, ', '))
+        echo 'Deleted ' . join(l:deleted, ', ')
     endif
     if !empty(l:failed)
         call dn#util#error('Errors occurred trying to delete:')
