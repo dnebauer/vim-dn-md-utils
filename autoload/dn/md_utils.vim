@@ -169,7 +169,7 @@ function! dn#md_utils#cleanOutput(...) abort
             return
         endif
         let l:params = copy(a:1)
-        echo 'Params dict: ' . l:params |  " DELETE
+        echo 'Params dict: ' . dn#util#stringify(l:params) |  " DELETE
         for l:param in keys(l:params)
             let l:value = l:params[l:param]
             if     l:param ==# 'insert'
