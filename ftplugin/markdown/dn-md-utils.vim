@@ -165,8 +165,8 @@ command! -buffer MUPanzerifyMetadata
 " Clean output on exit    {{{2
 augroup dn_markdown
     autocmd!
-    autocmd BufDelete * call dn#md_utils#cleanOutput({'caller': 'autocmd',
-                \ 'caller_arg': expand('<afile>')})
+    autocmd BufDelete <buffer=abuf> call dn#md_utils#cleanOutput(
+                \ {'caller': 'autocmd', 'caller_arg': expand('<afile>')})
 augroup END
 
 " Restore cpoptions    {{{1

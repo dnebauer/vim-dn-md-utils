@@ -202,7 +202,7 @@ endfunction
 function! s:_clean_output(...) abort
     " get path components; involves params
     let l:fp = resolve(expand('%:p'))
-    let l:on_buf_delete = g:dn_false
+    let l:on_buf_close = g:dn_false
     let l:verbose = g:dn_true
     if a:0 > 0
         " process caller (first param)
@@ -217,7 +217,7 @@ function! s:_clean_output(...) abort
         if l:caller ==# 'autocmd'
             if !empty(a:2)
                 let l:fp = resolve(expand(a:2))
-                let l:on_buf_delete = g:dn_true
+                let l:on_buf_close = g:dn_true
                 let l:verbose = g:dn_false
             else
                 return g:dn_false  " exit without feedback
@@ -257,7 +257,7 @@ function! s:_clean_output(...) abort
         return
     endif
     " confirm deletion if necessary
-    if l:on_buf_delete
+    if l:on_buf_close
         let l:to_delete = l:fps_for_deletion + l:dirs_for_deletion
         echo 'Output files and/or dirs detected: ' . join(l:to_delete, ', ')
         echohl Question
@@ -293,7 +293,7 @@ function! s:_clean_output(...) abort
         endif
     endfor
     " report outcome
-    if !empty(l:deleted) && !l:on_buf_delete
+    if !empty(l:deleted) && !l:on_buf_close
         echo 'Deleted ' . join(l:deleted, ', ')
     endif
     if !empty(l:failed)
