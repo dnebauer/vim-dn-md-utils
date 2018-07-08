@@ -160,10 +160,15 @@ whether any of them are symlinks to other locations. Also be aware that
 directories are forcible and recursively deleted, as with the *nix shell
 command "rm -fr".
 
+When a markdown buffer is closed (actually when the |BufDelete| event
+occurs), the plugin checks for output files/dirs and, if any are found,
+asks the user whether to delete them. If the user confirms deletion they
+are removed.
+
                                                 *dn#md_utils#cleanOutput()*
                                         *dn-md-utils-command-MUCleanOutput*
                                                    *dn-md-utils-mapping-co*
-Output files and directories are deleted using the
+Output files and directories can be deleted at any time by using the
 |dn#md_utils#cleanOutput()| function. It takes a single boolean parameter
 indicating whether the function was called from |Insert-mode|.
 

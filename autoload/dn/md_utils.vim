@@ -160,14 +160,41 @@ endfunction
 
 " s:_clean_output()    {{{2
 " does:   deletes 'FILE.html' file, 'FILE.pdf' file and '.tmp' directory
-" params: nil
+" params: caller - where function was called from
+"                  [no default, optional, string]
+"         file - filename of current buffer
+"                  [no default, optional, string]
 " prints: feedback
 " return: n/a
-function! s:_clean_output() abort
-    " get path components
+function! s:_clean_output(...) abort
+    " get path components; involves params
     let l:fp = resolve(expand('%:p'))
+    let l:confirm = g:dn_false
+    let l:verbose = g:dn_true
+    if a:0 > 0
+        let l:valid_callers = ['au']
+        let l:caller = a:1
+        if !count(l:valid_callers, l:caller)
+            call dn#util#error('Invalid caller: "' . l:caller . '"')
+            return
+        endif
+        if l:caller ==# 'au'
+            if a:2
+                let l:fp = resolve(expand(l:caller))
+                let l:confirm = g:dn_true
+                let l:verbose = g:dn_false
+            else
+                return g:dn_false  " exit without feedback
+            endif
+        else
+            call dn#util#error('Unhandled caller: "' . l:caller . '"')
+            return
+        endif
+    endif
     if empty(l:fp)
-        call dn#util#error('Buffer is not a file!')
+        if l:verbose
+            call dn#util#error('Buffer is not a file!')
+        endif
         return
     endif
     let l:dir = fnamemodify(l:fp, ':h')
@@ -191,8 +218,25 @@ function! s:_clean_output() abort
         endif
     endfor
     if empty(l:fps_for_deletion) && empty(l:dirs_for_deletion)
-        echo 'No output to clean up'
+        if l:verbose
+            echo 'No output to clean up'
+        endif
         return
+    endif
+    " confirm deletion if necessary
+    if l:confirm
+        let l:for_deletion = l:fps_for_deletion + l:dirs_for_deletion
+        echo 'Output files and/or dirs detected:'
+        echo '- ' . join(l:for_deletion, ', ')
+        echohl Question
+        echo 'Delete them? [y/N] '
+        echohl None
+        let l:char = nr2char(getchar())
+        echon l:char
+        if l:char !=? 'y'
+            echo 'Okay, no deletions'
+            return
+        endif
     endif
     " delete files/dirs
     let l:deleted = []
@@ -345,6 +389,13 @@ function! s:_utils_missing() abort
         return g:dn_true
     endif
 endfunction
+
+" Autocommands    {{{1
+" Clean output on exit    {{{2
+augroup dn_markdown
+    autocmd!
+    autocmd BufDelete * call dn#md_utils#_clean_output('au', expand('<afile>'))
+augroup END
 
 " Restore cpoptions    {{{1
 let &cpoptions = s:save_cpo

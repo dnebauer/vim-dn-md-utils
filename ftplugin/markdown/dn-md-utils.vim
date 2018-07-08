@@ -11,6 +11,10 @@ let b:did_dnm_md_utils = 1
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
+" Buffer variables    {{{1
+" Filepath    {{{2
+let b:dn_md_filepath = resolve(expand('%:p'))
+
 " Add system help    {{{1
 if !exists('g:dn_help_plugins')
     let g:dn_help_plugins = []
