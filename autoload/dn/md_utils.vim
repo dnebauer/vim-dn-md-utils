@@ -172,12 +172,9 @@ function! dn#md_utils#cleanOutput(...) abort
         echo 'Params dict: ' . dn#util#stringify(l:params) |  " DELETE
         for l:param in keys(l:params)
             let l:value = l:params[l:param]
-            if     l:param ==# 'insert'
-                if l:value | let l:insert = g:dn_true | endif
-            elseif l:param ==# 'caller'
-                if l:value | let l:caller = l:value | endif
-            elseif l:param ==# 'caller_arg'
-                if l:value | let l:caller_arg = l:caller_arg | endif
+            if     l:param ==# 'insert'     | let l:insert = g:dn_true
+            elseif l:param ==# 'caller'     | let l:caller = l:value
+            elseif l:param ==# 'caller_arg' | let l:caller_arg = l:value
             else
                 call dn#util#error(
                             \ l:fn . ': invalid param key "' . l:param . '"')
