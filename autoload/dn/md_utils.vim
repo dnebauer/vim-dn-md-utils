@@ -169,7 +169,6 @@ function! dn#md_utils#cleanOutput(...) abort
             return
         endif
         let l:params = copy(a:1)
-        echo 'Params dict: ' . dn#util#stringify(l:params) |  " DELETE
         for l:param in keys(l:params)
             let l:value = l:params[l:param]
             if     l:param ==# 'insert'     | let l:insert = g:dn_true
@@ -182,7 +181,6 @@ function! dn#md_utils#cleanOutput(...) abort
             endif
         endfor
     endif
-    echo 'Caller: ' . l:caller . ', caller arg: "' . l:caller_arg . '"' |  " DELETE
     " clean output files
     call s:_clean_output(l:caller, l:caller_arg)
     " return to calling mode
@@ -204,7 +202,7 @@ endfunction
 function! s:_clean_output(...) abort
     " get path components; involves params
     let l:fp = resolve(expand('%:p'))
-    let l:confirm = g:dn_false
+    let l:on_buf_delete = g:dn_false
     let l:verbose = g:dn_true
     if a:0 > 0
         " process caller (first param)
@@ -219,7 +217,7 @@ function! s:_clean_output(...) abort
         if l:caller ==# 'autocmd'
             if !empty(a:2)
                 let l:fp = resolve(expand(a:2))
-                let l:confirm = g:dn_true
+                let l:on_buf_delete = g:dn_true
                 let l:verbose = g:dn_false
             else
                 return g:dn_false  " exit without feedback
@@ -259,7 +257,7 @@ function! s:_clean_output(...) abort
         return
     endif
     " confirm deletion if necessary
-    if l:confirm
+    if l:on_buf_delete
         let l:to_delete = l:fps_for_deletion + l:dirs_for_deletion
         echo 'Output files and/or dirs detected: ' . join(l:to_delete, ', ')
         echohl Question
@@ -267,11 +265,7 @@ function! s:_clean_output(...) abort
         echohl None
         let l:char = nr2char(getchar())
         echon l:char
-        if l:char !=? 'y'
-            silent echo 'Okay, no deletions'
-            sleep 2
-            return
-        endif
+        if l:char !=? 'y' | return | endif
     endif
     " delete files/dirs
     let l:deleted = []
@@ -299,9 +293,8 @@ function! s:_clean_output(...) abort
         endif
     endfor
     " report outcome
-    if !empty(l:deleted)
-        silent echo 'Deleted ' . join(l:deleted, ', ')
-        sleep 2
+    if !empty(l:deleted) && !l:on_buf_delete
+        echo 'Deleted ' . join(l:deleted, ', ')
     endif
     if !empty(l:failed)
         call dn#util#error('Errors occurred trying to delete:')
