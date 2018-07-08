@@ -169,8 +169,17 @@ are removed.
                                         *dn-md-utils-command-MUCleanOutput*
                                                    *dn-md-utils-mapping-co*
 Output files and directories can be deleted at any time by using the
-|dn#md_utils#cleanOutput()| function. It takes a single boolean parameter
-indicating whether the function was called from |Insert-mode|.
+|dn#md_utils#cleanOutput()| function. It takes a single dict parameter
+which can have the following keys and arguments:
+
+    key         value~
+    insert      boolean - whether called from |Insert-mode|,
+                          default = false
+    caller      string  - either "mapping", "command" or "autocmd",
+                          no default
+    caller_arg  varies  - meaningful only for caller "autocmd"
+                          which expects string a filepath,
+                          e.g., <afile>, no default
 
 The |dn#md_utils#cleanOutput()| function can be called using the
 `:MUCleanOutput` command. The function can also be called using the

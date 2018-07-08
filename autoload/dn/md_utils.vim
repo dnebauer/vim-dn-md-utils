@@ -141,29 +141,65 @@ endfunction
 
 " dn#md_utils#cleanOutput([insert])    {{{2
 " does:   delete output files and temporary directories
-" params: insert - whether entered from insert mode
-"                  [default=<false>, optional, boolean]
+" params: args - dictionary which can the following keys:
+"                insert     - whether entered from insert mode
+"                             [default=<false>, optional, boolean]
+"                caller     - where function called from
+"                             [no default, optional, string]
+"                caller_arg - arg provided by caller
+"                             [no default, optional, type depends on caller]
 " return: nil
 function! dn#md_utils#cleanOutput(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:_utils_missing() | return | endif  " requires dn-utils plugin
+    let l:fn = 'dn#md_utils#cleanOutput'
     " params
-    let l:insert = (a:0 > 0 && a:1)
+    let l:insert = g:dn_false
+    let l:caller = ''
+    let l:caller_arg = ''
+    if a:0 > 1
+        call dn#util#error(l:fn . ': expected 1 arg, got ' . a:0)
+        return
+    endif
+    if a:0 == 1
+        if type(a:1) != v:t_dict
+            let l:type = dn#util#varType(a:1)
+            call dn#util#error(l:fn . ': expected dict param, got ' . l:type)
+            return
+        endif
+        let l:params = copy(a:1)
+        for l:param in keys(l:params)
+            let l:value = l:params[l:param]
+            if     l:value ==# 'insert'
+                if l:value | let l:insert = g:dn_true | endif
+            elseif l:value ==# 'caller'
+                if l:value | let l:caller = l:value | endif
+            elseif l:value ==# 'caller_arg'
+                if l:value | let l:caller_arg = l:caller_arg | endif
+            else
+                call dn#util#error(
+                            \ l:fn . ': invalid param key "' . l:param . '"')
+                return
+            endif
+        endfor
+    endif
     " clean output files
-    call s:_clean_output()
+    call s:_clean_output(l:caller, l:caller_arg)
     " return to calling mode
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
 " Private functions    {{{1
 
-" s:_clean_output()    {{{2
+" s:_clean_output([caller[, caller_arg]])    {{{2
 " does:   deletes 'FILE.html' file, 'FILE.pdf' file and '.tmp' directory
-" params: caller - where function was called from
-"                  [no default, optional, string]
-"         file - filename of current buffer
-"                  [no default, optional, string]
+" params: caller     - where function was called from
+"                      [no default, optional, must be one of
+"                       'mapping'|'command'|'autocmd']
+"         caller_arg - caller can provide an argument
+"                      [no default, optional, 'autocmd' expects filepath,
+"                       'mapping' and 'command' ignore arg]
 " prints: feedback
 " return: n/a
 function! s:_clean_output(...) abort
@@ -172,23 +208,23 @@ function! s:_clean_output(...) abort
     let l:confirm = g:dn_false
     let l:verbose = g:dn_true
     if a:0 > 0
-        let l:valid_callers = ['au']
+        " process caller (first param)
+        let l:valid_callers = ['mapping', 'command', 'autocmd']
         let l:caller = a:1
         if !count(l:valid_callers, l:caller)
             call dn#util#error('Invalid caller: "' . l:caller . '"')
             return
         endif
-        if l:caller ==# 'au'
-            if a:2
+        " process caller arg (second param) depending on caller
+        " - note that 'mapping' and 'command' callers ignore arg
+        if l:caller ==# 'autocmd'
+            if !empty(a:2)
                 let l:fp = resolve(expand(a:2))
                 let l:confirm = g:dn_true
                 let l:verbose = g:dn_false
             else
                 return g:dn_false  " exit without feedback
             endif
-        else
-            call dn#util#error('Unhandled caller: "' . l:caller . '"')
-            return
         endif
     endif
     if empty(l:fp)

@@ -111,12 +111,13 @@ if !hasmapto('<Plug>DnCOI')
     imap <buffer> <unique> <LocalLeader>co <Plug>DnCOI
 endif
 imap <buffer> <unique> <Plug>DnCOI
-            \ <Esc>:call dn#md_utils#cleanOutput(g:dn_true)<CR>
+            \ <Esc>:call dn#md_utils#cleanOutput(
+            \ {'caller': 'mapping', 'insert': g:dn_true})<CR>
 if !hasmapto('<Plug>DnCON')
     nmap <buffer> <unique> <LocalLeader>co <Plug>DnCON
 endif
 nmap <buffer> <unique> <Plug>DnCON
-            \ :call dn#md_utils#cleanOutput()<CR>
+            \ :call dn#md_utils#cleanOutput({'caller': 'mapping'})<CR>
 
 " \fig : insert figure    {{{2
 if !hasmapto('<Plug>DnFIGI')
@@ -150,7 +151,7 @@ command! -buffer MUAddBoilerplate
 
 " MUCleanOutput : clean output    {{{2
 command! -buffer MUCleanOutput
-            \ call dn#md_utils#cleanOutput()
+            \ call dn#md_utils#cleanOutput({'caller': 'command'})
 
 " MUInsertFigure : insert figure    {{{2
 command! -buffer MUInsertFigure
@@ -164,7 +165,8 @@ command! -buffer MUPanzerifyMetadata
 " Clean output on exit    {{{2
 augroup dn_markdown
     autocmd!
-    autocmd BufDelete * call dn#md_utils#_clean_output('au', expand('<afile>'))
+    autocmd BufDelete * call dn#md_utils#cleanOutput({'caller': 'autocmd',
+                \ 'caller_arg': expand('<afile>')})
 augroup END
 
 " Restore cpoptions    {{{1
