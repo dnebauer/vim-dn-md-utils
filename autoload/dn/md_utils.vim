@@ -180,7 +180,7 @@ function! s:_clean_output(...) abort
         endif
         if l:caller ==# 'au'
             if a:2
-                let l:fp = resolve(expand(l:caller))
+                let l:fp = resolve(expand(a:2))
                 let l:confirm = g:dn_true
                 let l:verbose = g:dn_false
             else
