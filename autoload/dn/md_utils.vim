@@ -390,13 +390,6 @@ function! s:_utils_missing() abort
     endif
 endfunction
 
-" Autocommands    {{{1
-" Clean output on exit    {{{2
-augroup dn_markdown
-    autocmd!
-    autocmd BufDelete * call dn#md_utils#_clean_output('au', expand('<afile>'))
-augroup END
-
 " Restore cpoptions    {{{1
 let &cpoptions = s:save_cpo
 unlet s:save_cpo    " }}}1

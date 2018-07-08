@@ -160,8 +160,15 @@ command! -buffer MUInsertFigure
 command! -buffer MUPanzerifyMetadata
             \ call dn#md_utils#panzerifyMetadata()
 
+" Autocommands    {{{1
+" Clean output on exit    {{{2
+augroup dn_markdown
+    autocmd!
+    autocmd BufDelete * call dn#md_utils#_clean_output('au', expand('<afile>'))
+augroup END
+
 " Restore cpoptions    {{{1
 let &cpoptions = s:save_cpo
-unlet s:save_cpo                                                         " }}}1
+unlet s:save_cpo    " }}}1
 
 " vim: set foldmethod=marker :
