@@ -150,6 +150,8 @@ endfunction
 "                             [no default, optional, type depends on caller]
 " return: nil
 function! dn#md_utils#cleanOutput(...) abort
+    " may be called by autocmd with universal pattern
+    if &filepath !~# '^markdown' | return | endif
     " universal tasks
     echo '' |  " clear command line
     if s:_utils_missing() | return | endif  " requires dn-utils plugin
