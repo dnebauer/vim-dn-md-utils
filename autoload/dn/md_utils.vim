@@ -260,16 +260,16 @@ function! s:_clean_output(...) abort
     endif
     " confirm deletion if necessary
     if l:confirm
-        let l:for_deletion = l:fps_for_deletion + l:dirs_for_deletion
-        echo 'Output files and/or dirs detected:'
-        echo '- ' . join(l:for_deletion, ', ')
+        let l:to_delete = l:fps_for_deletion + l:dirs_for_deletion
+        echo 'Output files and/or dirs detected: ' . join(l:to_delete, ', ')
         echohl Question
         echo 'Delete them? [y/N] '
         echohl None
         let l:char = nr2char(getchar())
         echon l:char
         if l:char !=? 'y'
-            echo 'Okay, no deletions'
+            silent echo 'Okay, no deletions'
+            sleep 2
             return
         endif
     endif
@@ -300,7 +300,8 @@ function! s:_clean_output(...) abort
     endfor
     " report outcome
     if !empty(l:deleted)
-        echo 'Deleted ' . join(l:deleted, ', ')
+        silent echo 'Deleted ' . join(l:deleted, ', ')
+        sleep 2
     endif
     if !empty(l:failed)
         call dn#util#error('Errors occurred trying to delete:')
