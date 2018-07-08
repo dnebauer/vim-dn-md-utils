@@ -184,6 +184,7 @@ function! dn#md_utils#cleanOutput(...) abort
             endif
         endfor
     endif
+    echo 'Caller: ' . l:caller . ', caller arg: "' . l:caller_arg . '"'
     " clean output files
     call s:_clean_output(l:caller, l:caller_arg)
     " return to calling mode
