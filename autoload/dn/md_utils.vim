@@ -171,11 +171,11 @@ function! dn#md_utils#cleanOutput(...) abort
         let l:params = copy(a:1)
         for l:param in keys(l:params)
             let l:value = l:params[l:param]
-            if     l:value ==# 'insert'
+            if     l:param ==# 'insert'
                 if l:value | let l:insert = g:dn_true | endif
-            elseif l:value ==# 'caller'
+            elseif l:param ==# 'caller'
                 if l:value | let l:caller = l:value | endif
-            elseif l:value ==# 'caller_arg'
+            elseif l:param ==# 'caller_arg'
                 if l:value | let l:caller_arg = l:caller_arg | endif
             else
                 call dn#util#error(
