@@ -13,7 +13,7 @@ set cpoptions&vim
 
 " Buffer variables    {{{1
 " Filepath    {{{2
-let b:dn_md_filepath = resolve(expand('%:p'))
+let b:dn_md_filepath = simplify(resolve(expand('%:p')))
 
 " Add system help    {{{1
 if !exists('g:dn_help_plugins')
