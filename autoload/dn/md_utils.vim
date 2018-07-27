@@ -1,23 +1,171 @@
-" Title:   autoload script for vim-dn-markdown ftplugin
-" Author:  David Nebauer
-" URL:     https://github.com/dnebauer/vim-dn-markdown
+" Vim ftplugin for markdown
+" Last change: 2018 Jul 26
+" Maintainer: David Nebauer
+" License: CC0
 
-" Load only once    {{{1
-if exists('g:loaded_dn_md_utils_autoload') | finish | endif
-let g:loaded_dn_md_utils_autoload = 1
+" Documentation {{{1
 
-" Save coptions    {{{1
-let s:save_cpo = &cpoptions
-set cpoptions&vim
+""
+" @section Introduction, intro
+" @order intro features settings commands mappings vars autocmds
+" An auxiliary filetype plugin for the markdown language.
+"
+" Previously the plugin author used a personal plugin to provide markdown-
+" related functionality. That plugin was retired when the plugin author
+" switched to the |vim-pandoc| plugin and panzer framework
+" (https://github.com/msprev/panzer) for markdown support.
+"
+" This plugin is intended to address any gaps in markdown support provided by
+" those tools. It currently provides support for a pandoc-compliant
+" yaml-metadata block at the top of a document (with links collected at the
+" bottom of a document) using panzer styles.
+"
+" @subsection Dependencies
+" Pandoc is used to generate output. It is not provided by this ftplugin.
+" This ftplugin depends on the |vim-pandoc| plugin and assumes panzer
+" (https://github.com/msprev/panzer) is installed and configured.
+"
+" This plugin is designed for use with pandoc version 2.0. At the time of
+" writing this is the development branch of pandoc, while the production
+" version is 1.19. As the change in major version number suggests, the
+" interfaces of these two versions of pandoc are incompatible. Hence, this
+" plugin will not work with the current production version of pandoc. There
+" are two known incompatibilities between these versions that affect this
+" plugin. The first is that the "smart" feature has changed from an option
+" ("--smart") to an extension ("--from=markdown+smart"). The second is a
+" change in the option used to specify the latex engine from "--latex-engine"
+" to "--pdf-engine".
 
-" Variables    {{{1
+""
+" @section Features, features
+" The major features of this plugin are support for yaml metadata blocks,
+" adding figures, and cleaning up output file and directories.
+"
+" @subsection Metadata
+" Pandoc-flavoured markdown uses a yaml-style metadata block at the top of the
+" file to specify values used by pandoc for document processing. With panzer
+" (https://github.com/msprev/panzer) installed the metadata block can also
+" specify panzer-related values which, in turn, specify values used by pandoc
+" for document processing.
+"
+" This ftplugin assumes the following default yaml-metadata block is used at
+" the top of documents:
+" >
+"     ---
+"     title:  "[][source]"
+"     author: "[][author]"
+"     date:   ""
+"     style:  [Standard, Latex12pt]  # panzer: 8-12,14,17,20pt; PaginateSections
+"     ---
+" <
+" The reference-style links are defined at the end of the document. The
+" default boilerplate for this is:
+" >
+"     [comment]: # (URLs)
+"     
+"        [author]: 
+"     
+"        [source]: 
+" <
+" The default metadata block and reference link definitions are added to a
+" document by the function @function(dn#md_utils#addBoilerplate), which can be
+" called using the command @command(MUAddBoilerplate) and mapping "<Leader>ab"
+" (see @section(mappings)).
+"
+" Previously created markdown files have yaml metadata blocks that do not use
+" panzer. Those metadata blocks can be "panzerified" using the
+" @function(dn#md_utils#panzerifyMetadata) function, which can be called using
+" the command @command(MUPanzerifyMetadata) and mapping "<Leader>pm" (see
+" @section(mappings)).
+"
+" @subsection Images
+" A helper function, mapping and command are provided to assist with adding
+" figures. They assume the images are defined using reference links with
+" optional attributes, and that all reference links are added to the end of
+" the document prefixed with three spaces. For example:
+" >
+"     See @fig:display and {@fig:packed}.
+" 
+"     ![Tuck boxes displayed][display]
+" 
+"     ![Tuck boxes packed away][packed]
+" 
+"     [comment]: # (URLs)
+" 
+"        [display]: resources/displayed.png "Tuck boxes displayed"
+"        {#fig:display .class width="50%"}
+" 
+"        [packed]: resources/packed.png "Tuck boxes packed away"
+"        {#fig:packed .class width="50%"} 
+" <
+" A figure is inserted on the following line using the
+" @function(dn#md_utils#insertFigure) function, which can be called using the
+" command @command(MUInsertFigure) and mapping "<Leader>fig" (see
+" @section(mappings)).
+"
+" @subsection Output
+" This plugin does not assist with generation of output, but does provide a
+" mapping, command and function for deleting output files and temporary output
+" directories. The term "clean" is used, as in the makefile keyword that
+" deletes all working and output files.
+"
+" Cleaning of output only occurs if the current buffer contains a file. The
+" directory searched for items to delete is the directory in which the file in
+" the current buffer is located.
+"
+" If the file being edited is FILE.ext, the files that will be deleted have
+" names like "FILE.html" and "FILE.pdf" (see
+" @function(dn#md_utils#cleanOutput) for a complete list). The temporary
+" output subdirectory ".tmp" will also be recursively force deleted. Warning:
+" This plugin does not check that it is safe to delete files and directories
+" identified for deletion. For example, it does not check whether any of them
+" are symlinks to other locations. Also be aware that directories are forcibly
+" and recursively deleted, as with the *nix shell command "rm -fr".
+"
+" When a markdown buffer is closed (actually when the |BufDelete| event
+" occurs), the plugin checks for output files/directories and, if any are
+" found, asks the user whether to delete them. If the user confirms deletion
+" they are removed. When vim exits (actually, when the |VimLeavePre| event
+" occurs) the plugin looks for any markdown buffers and looks in their
+" respective directories for output files/directories and, if any are found,
+" asks the user whether to delete them.
+" 
+" Output files and directories can be deleted at any time by using the
+" @function(dn#md_utils#cleanOutput) function, which can be called using the
+" command @command(MUCleanOutput) and mapping "<Leader>co" (see
+" @section(mappings)).
+
+""
+" @setting b:disable_dn_md_utils
+" Disables this plugin if set to a true value.
+
+" }}}1
+
+" Script variables
+
+" s:metadata_triad - metadata skeleton for title/author/date    {{{1
+
+""
+" Metadata skeleton for title, author and date.
 let s:metadata_triad = [
             \ 'title:  "[][source]"',
             \ 'author: "[][author]"',
             \ 'date:   ""'
             \ ]
-let s:metadata_style = 'style:  [Standard, Latex12pt]  # panzer: '
-            \ . '8-12,14,17,20pt; PaginateSections'
+
+" s:metadata_style - metadata skeleton for panzer styles    {{{1
+
+""
+" Metadata skeleton for panzer styles.
+let s:metadata_style = [
+            \ 'style:  [Standard, Latex14pt]',
+            \ '        # Latex8-12|14|17|20pt; PaginateSections; InludeFiles'
+            \ ]
+
+" s:refs           - skeleton for url comment block    {{{1
+
+""
+" Comment block for url references to go at end of document.
 let s:refs = [
             \ '',
             \ '[comment]: # (URLs)',
@@ -26,182 +174,26 @@ let s:refs = [
             \ '',
             \ '   [source]: '
             \ ]
+" }}}1
 
-" Public functions    {{{1
+" Script functions
 
-" dn#md_utils#addBoilerplate([insert])    {{{2
-" does:   add panzer/markdown boilerplate to top and bottom of file
-" params: insert - whether entered from insert mode
-"                  [default=<false>, optional, boolean]
-" return: nil
-function! dn#md_utils#addBoilerplate(...) abort
-    " universal tasks
-    echo '' |  " clear command line
-    if s:_utils_missing() | return | endif  " requires dn-utils plugin
-    " params
-    let l:insert = (a:0 > 0 && a:1)
-    let l:pos = getcurpos()
-    try
-        " add yaml metadata boilerplate at beginning of file
-        let l:metadata = ['---']
-        call extend(l:metadata, s:metadata_triad)
-        call extend(l:metadata, [s:metadata_style, '---'])
-        call append(0, l:metadata)
-        " add references boilerplate to end of file
-        call append(line('$'), s:refs)
-        " reset cursor
-        let l:pos[1] += len(l:metadata)
-    finally
-        call setpos('.', l:pos)
-        redraw!
-    endtry
-    " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
-endfunction
+" s:clean_output([caller[, caller_arg]])    {{{1
 
-" dn#md_utils#insertFigure([insert])    {{{2
-" does:   insert figure on new line
-" params: insert - whether entered from insert mode
-"                  [default=<false>, optional, boolean]
-" return: nil
-function! dn#md_utils#insertFigure(...) abort
-    " universal tasks
-    echo '' |  " clear command line
-    if s:_utils_missing() | return | endif  " requires dn-utils plugin
-    " params
-    let l:insert = (a:0 > 0 && a:1)
-    " insert figure
-    call s:_insert_figure()
-    " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
-endfunction
-
-" dn#md_utils#panzerifyMetadata([insert])    {{{2
-" does:   convert yaml metadata block to use panzer
-" params: insert - whether entered from insert mode
-"                  [default=<false>, optional, boolean]
-" return: nil
-function! dn#md_utils#panzerifyMetadata(...) abort
-    " universal tasks
-    echo '' |  " clear command line
-    if s:_utils_missing() | return | endif  " requires dn-utils plugin
-    " params
-    let l:insert = (a:0 > 0 && a:1)
-    let l:pos = getcurpos()
-    try
-        " must have yaml metadata block at beginning of file
-        let l:first_line = getline(1)
-        if l:first_line !~# '^---\s*$'
-            throw 'Cannot find yaml metadata block at head of file'
-        endif
-        call cursor(1, 1)
-        let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
-        if !l:end_metadata
-            throw 'Cannot find end of metadata block at head of file'
-        endif
-        let l:file_metadata = getline(2, l:end_metadata - 1)
-        " keep initial comments and title, author and date fields
-        let l:metadata = ['---']
-        for l:line in l:file_metadata
-            if l:line =~# '^#'  " keep comments
-                call add(l:metadata, l:line)
-                continue
-            endif
-            let l:match = matchlist(l:line, '\_^\(\a\%[\l-]\+\):')
-            if empty(l:match)  " plain line, may be continuation, keep
-                call add(l:metadata, l:line)
-                continue
-            endif
-            " is a yaml field, terminate unless title|author|date
-            let l:field = l:match[1]
-            if l:field =~# '\_^\(title\|author\|date\)\_$'
-                call add(l:metadata, l:line)
-                continue
-            endif
-            break
-        endfor
-        " delete any comment lines at end of metadata
-        while l:metadata[-1] =~# '^#'
-            unlet l:metadata[-1]
-        endwhile
-        " add panzer style to end of metadata block
-        let l:panzer_metadata = [s:metadata_style, '---']
-        call extend(l:metadata, l:panzer_metadata)
-        " delete current metadata
-        execute '1,' . l:end_metadata . 'd'
-        " insert new metadata
-        call append(0, l:metadata)
-    finally
-        call setpos('.', l:pos)
-        redraw!
-    endtry
-    " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
-endfunction
-
-" dn#md_utils#cleanOutput([insert])    {{{2
-" does:   delete output files and temporary directories
-" params: args - dictionary which can the following keys:
-"                insert     - whether entered from insert mode
-"                             [default=<false>, optional, boolean]
-"                caller     - where function called from
-"                             [no default, optional, string]
-"                caller_arg - arg provided by caller
-"                             [no default, optional, type depends on caller]
-" return: nil
-function! dn#md_utils#cleanOutput(...) abort
-    " may be called by autocmd with universal pattern
-    if &filepath !~# '^markdown' | return | endif
-    " universal tasks
-    echo '' |  " clear command line
-    if s:_utils_missing() | return | endif  " requires dn-utils plugin
-    let l:fn = 'dn#md_utils#cleanOutput'
-    " params
-    let l:insert = g:dn_false
-    let l:caller = ''
-    let l:caller_arg = ''
-    if a:0 > 1
-        call dn#util#error(l:fn . ': expected 1 arg, got ' . a:0)
-        return
-    endif
-    if a:0 == 1
-        if type(a:1) != v:t_dict
-            let l:type = dn#util#varType(a:1)
-            call dn#util#error(l:fn . ': expected dict param, got ' . l:type)
-            return
-        endif
-        let l:params = copy(a:1)
-        for l:param in keys(l:params)
-            let l:value = l:params[l:param]
-            if     l:param ==# 'insert'     | let l:insert = g:dn_true
-            elseif l:param ==# 'caller'     | let l:caller = l:value
-            elseif l:param ==# 'caller_arg' | let l:caller_arg = l:value
-            else
-                call dn#util#error(
-                            \ l:fn . ': invalid param key "' . l:param . '"')
-                return
-            endif
-        endfor
-    endif
-    " clean output files
-    call s:_clean_output(l:caller, l:caller_arg)
-    " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
-endfunction
-
-" Private functions    {{{1
-
-" s:_clean_output([caller[, caller_arg]])    {{{2
-" does:   deletes 'FILE.html' file, 'FILE.pdf' file and '.tmp' directory
-" params: caller     - where function was called from
-"                      [no default, optional, must be one of
-"                       'mapping'|'command'|'autocmd']
-"         caller_arg - caller can provide an argument
-"                      [no default, optional, 'autocmd' expects filepath,
-"                       'mapping' and 'command' ignore arg]
-" prints: feedback
-" return: n/a
-function! s:_clean_output(...) abort
+""
+" @private
+" Deletes common output artefacts: output files with extensions "htm", "html",
+" "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+"
+" The [caller] argument provides the calling context. This can be one of
+" "mapping", "command" or "autocmd". An argument can be provided for the
+" caller: this is the [caller_arg]. The [caller] "autocmd" expects a file path
+" [caller_arg]. The [caller] arguments "mapping" and "command" ignore any
+" accompanying [caller_arg].
+"
+" @default caller=""
+" @default caller_arg=""
+function! s:clean_output(...) abort
     " get path components; involves params
     let l:fp = resolve(expand('%:p'))
     let l:on_buf_close = g:dn_false
@@ -215,14 +207,13 @@ function! s:_clean_output(...) abort
             return
         endif
         " process caller arg (second param) depending on caller
-        " - note that 'mapping' and 'command' callers ignore arg
+        " - note that 'mapping' and 'command' callers ignore arg,
+        "   and also have no effect whatsoever
         if l:caller ==# 'autocmd'
             if !empty(a:2)
-                let l:fp = resolve(expand(a:2))
+                let l:fp = simplify(resolve(expand(a:2)))
                 let l:on_buf_close = g:dn_true
                 let l:verbose = g:dn_false
-            else
-                return g:dn_false  " exit without feedback
             endif
         endif
     endif
@@ -306,12 +297,12 @@ function! s:_clean_output(...) abort
     endif
 endfunction
 
-" s:_insert_figure()    {{{2
-" does:   insert figure
-" params: nil
-" prints: nil
-" return: n/a
-function! s:_insert_figure() abort
+" s:insert_figure()    {{{1
+
+""
+" @private
+" Insert figure.
+function! s:insert_figure() abort
     " get image file
     let l:prompt = 'Enter image filepath (empty to abort): '
     let l:path = input(l:prompt, '', 'file')
@@ -406,12 +397,12 @@ function! s:_insert_figure() abort
     call setpos('.', l:pos)
 endfunction
 
-" s:_utils_missing()    {{{2
-" does:   determine whether dn-utils plugin is loaded
-" params: nil
-" prints: nil
-" return: whether dn-utils plugin is loaded
-function! s:_utils_missing() abort
+" s:utils_missing()    {{{1
+
+""
+" @private
+" Determines whether dn-utils plugin is loaded.
+function! s:utils_missing() abort
     if exists('g:loaded_dn_utils')
         return g:dn_false
     else
@@ -420,9 +411,195 @@ function! s:_utils_missing() abort
         return g:dn_true
     endif
 endfunction
+" }}}1
 
-" Restore cpoptions    {{{1
-let &cpoptions = s:save_cpo
-unlet s:save_cpo    " }}}1
+" Private functions
+
+" Public functions
+
+" dn#md_utils#addBoilerplate([insert])    {{{1
+
+""
+" @public
+" Adds panzer/markdown boilerplate to the top and bottom of the document.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+function! dn#md_utils#addBoilerplate(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    let l:pos = getcurpos()
+    try
+        " add yaml metadata boilerplate at beginning of file
+        let l:metadata = ['---']
+        call extend(l:metadata, s:metadata_triad)
+        call extend(l:metadata, s:metadata_style)
+        call add(l:metadata, '---')
+        call append(0, l:metadata)
+        " add references boilerplate to end of file
+        call append(line('$'), s:refs)
+        " reset cursor
+        let l:pos[1] += len(l:metadata)
+    finally
+        call setpos('.', l:pos)
+        redraw!
+    endtry
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_utils#insertFigure([insert])    {{{1
+
+""
+" @public
+" Inserts a figure on a new line.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+function! dn#md_utils#insertFigure(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    " insert figure
+    call s:insert_figure()
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_utils#panzerifyMetadata([insert])    {{{1
+
+""
+" @public
+" Adds a line to the initial metadata block, if present, for panzer styles.
+" Intended for use when converting from plain pandoc to pandoc-plus-panzer.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+function! dn#md_utils#panzerifyMetadata(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    let l:pos = getcurpos()
+    try
+        " must have yaml metadata block at beginning of file
+        let l:first_line = getline(1)
+        if l:first_line !~# '^---\s*$'
+            throw 'Cannot find yaml metadata block at head of file'
+        endif
+        call cursor(1, 1)
+        let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
+        if !l:end_metadata
+            throw 'Cannot find end of metadata block at head of file'
+        endif
+        let l:file_metadata = getline(2, l:end_metadata - 1)
+        " keep initial comments and title, author and date fields
+        let l:metadata = ['---']
+        for l:line in l:file_metadata
+            if l:line =~# '^#'  " keep comments
+                call add(l:metadata, l:line)
+                continue
+            endif
+            let l:match = matchlist(l:line, '\_^\(\a\%[\l-]\+\):')
+            if empty(l:match)  " plain line, may be continuation, keep
+                call add(l:metadata, l:line)
+                continue
+            endif
+            " is a yaml field, terminate unless title|author|date
+            let l:field = l:match[1]
+            if l:field =~# '\_^\(title\|author\|date\)\_$'
+                call add(l:metadata, l:line)
+                continue
+            endif
+            break
+        endfor
+        " delete any comment lines at end of metadata
+        while l:metadata[-1] =~# '^#'
+            unlet l:metadata[-1]
+        endwhile
+        " add panzer style to end of metadata block
+        let l:panzer_metadata = s:metadata_style[:]  " copy
+        call add(l:panzer_metadata, '---')
+        call extend(l:metadata, l:panzer_metadata)
+        " delete current metadata
+        execute '1,' . l:end_metadata . 'd'
+        " insert new metadata
+        call append(0, l:metadata)
+    finally
+        call setpos('.', l:pos)
+        redraw!
+    endtry
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_utils#cleanOutput([args])    {{{1
+
+""
+" @public
+" Deletes common output artefacts: output files with extensions "htm", "html",
+" "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+"
+" Arguments are provided in optional |Dictionary| [args]. There are three
+" valid keys for this dictionary: "insert", "caller" and "caller_arg".
+"
+" The "insert" key has a boolean value which determines whether or not the
+" function was entered from insert mode.
+"
+" The "caller" key value provides the calling context. This can be one of
+" "mapping", "command" or "autocmd". An argument can be provided for the
+" caller: this is the value for the "caller_arg" key. The caller "autocmd"
+" expects a file path "caller_arg". The caller arguments "mapping" and
+" "command" ignore any accompanying "caller_arg".
+"
+" @default args={'insert': 0, 'caller': '', 'caller_arg': ''}
+function! dn#md_utils#cleanOutput(...) abort
+    " may be called by autocmd with universal pattern
+    if &filetype !~# '^markdown' | return | endif
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    let l:fn = 'dn#md_utils#cleanOutput'
+    " params
+    let l:insert = g:dn_false
+    let l:caller = ''
+    let l:caller_arg = ''
+    if a:0 > 1
+        call dn#util#error(l:fn . ': expected 1 arg, got ' . a:0)
+        return
+    endif
+    if a:0 == 1
+        if type(a:1) != v:t_dict
+            let l:type = dn#util#varType(a:1)
+            call dn#util#error(l:fn . ': expected dict param, got ' . l:type)
+            return
+        endif
+        let l:params = copy(a:1)
+        for l:param in keys(l:params)
+            let l:value = l:params[l:param]
+            if     l:param ==# 'insert'     | let l:insert = g:dn_true
+            elseif l:param ==# 'caller'     | let l:caller = l:value
+            elseif l:param ==# 'caller_arg' | let l:caller_arg = l:value
+            else
+                call dn#util#error(
+                            \ l:fn . ': invalid param key "' . l:param . '"')
+                return
+            endif
+        endfor
+    endif
+    " clean output files
+    call s:clean_output(l:caller, l:caller_arg)
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
 
 " vim: set foldmethod=marker :

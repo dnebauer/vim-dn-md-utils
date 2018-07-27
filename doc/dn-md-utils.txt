@@ -1,0 +1,250 @@
+*dn-md-utils.txt*	Auxiliary filetype plugin for the markdown language
+David Nebauer                                                    *dn-md-utils*
+
+==============================================================================
+CONTENTS                                                *dn-md-utils-contents*
+  1. Introduction..........................................|dn-md-utils-intro|
+  2. Configuration........................................|dn-md-utils-config|
+  3. Features...........................................|dn-md-utils-features|
+  4. Functions.........................................|dn-md-utils-functions|
+  5. Commands...........................................|dn-md-utils-commands|
+  6. Mappings...........................................|dn-md-utils-mappings|
+  7. Variables..............................................|dn-md-utils-vars|
+  8. Autocommands.......................................|dn-md-utils-autocmds|
+
+==============================================================================
+INTRODUCTION                                               *dn-md-utils-intro*
+
+An auxiliary filetype plugin for the markdown language.
+
+Previously the plugin author used a personal plugin to provide markdown-
+related functionality. That plugin was retired when the plugin author switched
+to the |vim-pandoc| plugin and panzer framework
+(https://github.com/msprev/panzer) for markdown support.
+
+This plugin is intended to address any gaps in markdown support provided by
+those tools. It currently provides support for a pandoc-compliant
+yaml-metadata block at the top of a document (with links collected at the
+bottom of a document) using panzer styles.
+
+DEPENDENCIES
+Pandoc is used to generate output. It is not provided by this ftplugin. This
+ftplugin depends on the |vim-pandoc| plugin and assumes panzer
+(https://github.com/msprev/panzer) is installed and configured.
+
+This plugin is designed for use with pandoc version 2.0. At the time of
+writing this is the development branch of pandoc, while the production version
+is 1.19. As the change in major version number suggests, the interfaces of
+these two versions of pandoc are incompatible. Hence, this plugin will not
+work with the current production version of pandoc. There are two known
+incompatibilities between these versions that affect this plugin. The first is
+that the "smart" feature has changed from an option ("--smart") to an
+extension ("--from=markdown+smart"). The second is a change in the option used
+to specify the latex engine from "--latex-engine" to "--pdf-engine".
+
+==============================================================================
+CONFIGURATION                                             *dn-md-utils-config*
+
+                                                       *b:disable_dn_md_utils*
+Disables this plugin if set to a true value.
+
+==============================================================================
+FEATURES                                                *dn-md-utils-features*
+
+The major features of this plugin are support for yaml metadata blocks, adding
+figures, and cleaning up output file and directories.
+
+METADATA
+Pandoc-flavoured markdown uses a yaml-style metadata block at the top of the
+file to specify values used by pandoc for document processing. With panzer
+(https://github.com/msprev/panzer) installed the metadata block can also
+specify panzer-related values which, in turn, specify values used by pandoc
+for document processing.
+
+This ftplugin assumes the following default yaml-metadata block is used at the
+top of documents:
+>
+    ---
+    title:  "[][source]"
+    author: "[][author]"
+    date:   ""
+    style:  [Standard, Latex12pt]  # panzer: 8-12,14,17,20pt; PaginateSections
+    ---
+<
+The reference-style links are defined at the end of the document. The default
+boilerplate for this is:
+>
+    [comment]: # (URLs)
+
+       [author]:
+
+       [source]:
+<
+The default metadata block and reference link definitions are added to a
+document by the function |dn#md_utils#addBoilerplate()|, which can be called
+using the command |:MUAddBoilerplate| and mapping "<Leader>ab" (see
+|dn-md-utils-mappings|).
+
+Previously created markdown files have yaml metadata blocks that do not use
+panzer. Those metadata blocks can be "panzerified" using the
+|dn#md_utils#panzerifyMetadata()| function, which can be called using the
+command |:MUPanzerifyMetadata| and mapping "<Leader>pm" (see
+|dn-md-utils-mappings|).
+
+IMAGES
+A helper function, mapping and command are provided to assist with adding
+figures. They assume the images are defined using reference links with
+optional attributes, and that all reference links are added to the end of the
+document prefixed with three spaces. For example:
+>
+    See @fig:display and {@fig:packed}.
+
+    ![Tuck boxes displayed][display]
+
+    ![Tuck boxes packed away][packed]
+
+    [comment]: # (URLs)
+
+       [display]: resources/displayed.png "Tuck boxes displayed"
+       {#fig:display .class width="50%"}
+
+       [packed]: resources/packed.png "Tuck boxes packed away"
+       {#fig:packed .class width="50%"}
+<
+A figure is inserted on the following line using the
+|dn#md_utils#insertFigure()| function, which can be called using the command
+|:MUInsertFigure| and mapping "<Leader>fig" (see |dn-md-utils-mappings|).
+
+OUTPUT
+This plugin does not assist with generation of output, but does provide a
+mapping, command and function for deleting output files and temporary output
+directories. The term "clean" is used, as in the makefile keyword that deletes
+all working and output files.
+
+Cleaning of output only occurs if the current buffer contains a file. The
+directory searched for items to delete is the directory in which the file in
+the current buffer is located.
+
+If the file being edited is FILE.ext, the files that will be deleted have
+names like "FILE.html" and "FILE.pdf" (see |dn#md_utils#cleanOutput()| for a
+complete list). The temporary output subdirectory ".tmp" will also be
+recursively force deleted. Warning: This plugin does not check that it is safe
+to delete files and directories identified for deletion. For example, it does
+not check whether any of them are symlinks to other locations. Also be aware
+that directories are forcibly and recursively deleted, as with the *nix shell
+command "rm -fr".
+
+When a markdown buffer is closed (actually when the |BufDelete| event occurs),
+the plugin checks for output files/directories and, if any are found, asks the
+user whether to delete them. If the user confirms deletion they are removed.
+When vim exits (actually, when the |VimLeavePre| event occurs) the plugin
+looks for any markdown buffers and looks in their respective directories for
+output files/directories and, if any are found, asks the user whether to
+delete them.
+
+Output files and directories can be deleted at any time by using the
+|dn#md_utils#cleanOutput()| function, which can be called using the command
+|:MUCleanOutput| and mapping "<Leader>co" (see |dn-md-utils-mappings|).
+
+==============================================================================
+FUNCTIONS                                              *dn-md-utils-functions*
+
+dn#md_utils#addBoilerplate([insert])            *dn#md_utils#addBoilerplate()*
+  Adds panzer/markdown boilerplate to the top and bottom of the document.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+
+dn#md_utils#insertFigure([insert])                *dn#md_utils#insertFigure()*
+  Inserts a figure on a new line.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+
+dn#md_utils#panzerifyMetadata([insert])      *dn#md_utils#panzerifyMetadata()*
+  Adds a line to the initial metadata block, if present, for panzer styles.
+  Intended for use when converting from plain pandoc to pandoc-plus-panzer.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+
+dn#md_utils#cleanOutput([args])                    *dn#md_utils#cleanOutput()*
+  Deletes common output artefacts: output files with extensions "htm", "html",
+  "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+
+  Arguments are provided in optional |Dictionary| [args]. There are three
+  valid keys for this dictionary: "insert", "caller" and "caller_arg".
+
+  The "insert" key has a boolean value which determines whether or not the
+  function was entered from insert mode.
+
+  The "caller" key value provides the calling context. This can be one of
+  "mapping", "command" or "autocmd". An argument can be provided for the
+  caller: this is the value for the "caller_arg" key. The caller "autocmd"
+  expects a file path "caller_arg". The caller arguments "mapping" and
+  "command" ignore any accompanying "caller_arg".
+
+  [args] is {'insert': 0, 'caller': '', 'caller_arg': ''} if omitted.
+
+==============================================================================
+COMMANDS                                                *dn-md-utils-commands*
+
+:[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
+  Calls |dn#md_utils#addBoilerplate()| to add a metadata header template,
+  including title, author, date, and (panzer) styles, and a footer template
+  for url reference links.
+
+:[N]MUCleanOutput                                             *:MUCleanOutput*
+  Calls |dn#md_utils#cleanOutput()| to delete output files and temporary
+  output directories. (The |Dictionary| argument includes the "caller" key
+  with a value of "command" but does not include the "caller_arg" or "insert"
+  keys.
+
+:[N]MUInsertFigure                                           *:MUInsertFigure*
+  Calls |dn#md_utils#insertFigure()| to insert a figure on the following line.
+
+:[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
+  Calls |dn#md_utils#panzerifyMetadata()| to add a line to the document's
+  metadata block for panzer styles.
+
+==============================================================================
+MAPPINGS                                                *dn-md-utils-mappings*
+
+The following mappings are provided for both |Insert-mode| and |Normal-mode|:
+
+<Leader>ab
+  * add markdown boilerplate
+  * calls |dn#md_utils#addBoilerplate()|
+
+<Leader>pm
+  * convert yaml metadata block to use panzer
+  * calls |dn#md_utils#panzerifyMetadata()|
+
+<Leader>fig
+  * insert figure on the following line
+  * calls |dn#md_utils#insertFigure()|
+
+<Leader>co
+  * clean output files and temporary directories
+  * calls |dn#md_utils#cleanOutput()|
+
+==============================================================================
+VARIABLES                                                   *dn-md-utils-vars*
+
+This ftplugin contributes to the |dn-utils| plugin's help system (see
+|dn#util#help()| for details). In the help system navigate to: vim -> markdown
+ftplugin.
+
+==============================================================================
+AUTOCOMMANDS                                            *dn-md-utils-autocmds*
+
+Clean output files and directories when buffer deleted (if markdown file type)
+or vim exits (for all buffers of markdown file type). Involves autocmds for
+the |FileType|, |BufDelete| and |VimLeavePre| events. All autocmds created by
+this ftplugin are assigned to augroup "dn_markdown".
+
+
+vim:tw=78:ts=8:ft=help:norl:

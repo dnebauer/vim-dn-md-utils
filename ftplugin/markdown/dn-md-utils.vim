@@ -1,15 +1,16 @@
-" Function:    Vim ftplugin for markdown
-" Last Change: 2018-02-03
-" Maintainer:  David Nebauer <david@nebauer.org>
+" Vim ftplugin for markdown
+" Last change: 2018 Jul 26
+" Maintainer: David Nebauer
+" License: CC0
 
-" Load only once    {{{1
-if exists('b:did_dnm_md_utils') | finish | endif
-let b:did_dnm_md_utils = 1
+" Boilerplate    {{{1
+if exists('b:disable_dn_md_utils') | finish | endif
+if exists('s:loaded') | finish | endif
+let s:loaded = 1
 
-" Save cpoptions    {{{1
-" - avoids unpleasantness from customised 'compatible' settings
 let s:save_cpo = &cpoptions
 set cpoptions&vim
+" }}}1
 
 " Buffer variables    {{{1
 " Filepath    {{{2
@@ -169,8 +170,9 @@ augroup dn_markdown
                 \ {'caller': 'autocmd', 'caller_arg': expand('<afile>')})
 augroup END
 
-" Restore cpoptions    {{{1
+" Boilerplate    {{{1
 let &cpoptions = s:save_cpo
-unlet s:save_cpo    " }}}1
+unlet s:save_cpo
+" }}}1
 
 " vim: set foldmethod=marker :
