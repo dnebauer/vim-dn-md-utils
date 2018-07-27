@@ -174,6 +174,18 @@ let s:refs = [
             \ '',
             \ '   [source]: '
             \ ]
+
+" s:clean_suffixes - suffixes of output files    {{{1
+
+""
+" Suffixes of output files that will be deleted by cleanup routine.
+let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
+
+" s:clean_dirs     - temporary output directory names {{{1
+
+""
+" Names of temporary directories created during pandoc output.
+let s:clean_dirs = ['.tmp']
 " }}}1
 
 " Script functions
@@ -218,26 +230,22 @@ function! s:clean_output(...) abort
         endif
     endif
     if empty(l:fp)
-        if l:verbose
-            call dn#util#error('Buffer is not a file!')
-        endif
+        if l:verbose | call dn#util#error('Buffer is not a file!') | endif
         return
     endif
     let l:dir = fnamemodify(l:fp, ':h')
     let l:file = fnamemodify(l:fp, ':t')
     let l:base = fnamemodify(l:file, ':r')
     " identify deletion candidates
-    let l:deletable_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
-    let l:deletable_subdirs = ['.tmp']
     let l:fps_for_deletion = []
     let l:dirs_for_deletion = []
-    for l:suffix in l:deletable_suffixes
+    for l:suffix in s:clean_suffixes
         let l:candidate = l:dir . '/' . l:base . '.' . l:suffix
         if filereadable(l:candidate)
             call add(l:fps_for_deletion, l:candidate)
         endif
     endfor
-    for l:subdir in l:deletable_subdirs
+    for l:subdir in s:clean_dirs
         let l:candidate = l:dir . '/' . l:subdir
         if isdirectory(l:candidate)
             call add(l:dirs_for_deletion, l:candidate)
