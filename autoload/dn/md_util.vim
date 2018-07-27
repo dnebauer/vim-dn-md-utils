@@ -447,6 +447,7 @@ endfunction
 " Note there are dialects of markdown and the filetype value of a markdown
 " file may simply be "markdown" or may be something like "markdown.pandoc".
 function! dn#md_util#_register(fp, ft)
+    echo 'Filepath: "' . a:fp . '", filetype: "' . a:ft . '"'
     if empty(a:fp) | return | endif  " not a file buffer
     if a:ft =~# '^markdown'  " is a markdown buffer
         let l:registered = 0
