@@ -25,7 +25,7 @@ augroup dn_markdown
     autocmd!
     autocmd FileType * call dn#md_util#_register(
                 \ simplify(resolve(expand('<afile>:p'))),
-                \ <amatch>
+                \ expand('<amatch>')
                 \ )
     autocmd BufDelete * call dn#md_util#cleanOutput(
                 \ {'caller': 'autocmd', 'caller_arg': expand('<afile>')})
