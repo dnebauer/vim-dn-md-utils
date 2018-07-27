@@ -455,7 +455,7 @@ function! dn#md_util#_register(fp, ft)
             if l:item['filepath'] ==# a:fp | let l:registered = 1 | endif
         endfor
         if !l:registered
-            let l:new_item = {'filetype': a:fp,
+            let l:new_item = {'filepath': a:fp,
                         \     'bufname' : bufname('%'),
                         \     'bufnr'   : bufnr('%'),
                         \     'filetype': a:ft}
