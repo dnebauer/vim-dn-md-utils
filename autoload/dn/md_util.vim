@@ -68,13 +68,13 @@
 "        [source]: 
 " <
 " The default metadata block and reference link definitions are added to a
-" document by the function @function(dn#md_utils#addBoilerplate), which can be
+" document by the function @function(dn#md_util#addBoilerplate), which can be
 " called using the command @command(MUAddBoilerplate) and mapping "<Leader>ab"
 " (see @section(mappings)).
 "
 " Previously created markdown files have yaml metadata blocks that do not use
 " panzer. Those metadata blocks can be "panzerified" using the
-" @function(dn#md_utils#panzerifyMetadata) function, which can be called using
+" @function(dn#md_util#panzerifyMetadata) function, which can be called using
 " the command @command(MUPanzerifyMetadata) and mapping "<Leader>pm" (see
 " @section(mappings)).
 "
@@ -99,7 +99,7 @@
 "        {#fig:packed .class width="50%"} 
 " <
 " A figure is inserted on the following line using the
-" @function(dn#md_utils#insertFigure) function, which can be called using the
+" @function(dn#md_util#insertFigure) function, which can be called using the
 " command @command(MUInsertFigure) and mapping "<Leader>fig" (see
 " @section(mappings)).
 "
@@ -115,7 +115,7 @@
 "
 " If the file being edited is FILE.ext, the files that will be deleted have
 " names like "FILE.html" and "FILE.pdf" (see
-" @function(dn#md_utils#cleanOutput) for a complete list). The temporary
+" @function(dn#md_util#cleanOutput) for a complete list). The temporary
 " output subdirectory ".tmp" will also be recursively force deleted. Warning:
 " This plugin does not check that it is safe to delete files and directories
 " identified for deletion. For example, it does not check whether any of them
@@ -131,7 +131,7 @@
 " asks the user whether to delete them.
 " 
 " Output files and directories can be deleted at any time by using the
-" @function(dn#md_utils#cleanOutput) function, which can be called using the
+" @function(dn#md_util#cleanOutput) function, which can be called using the
 " command @command(MUCleanOutput) and mapping "<Leader>co" (see
 " @section(mappings)).
 
@@ -181,11 +181,29 @@ let s:refs = [
 " Suffixes of output files that will be deleted by cleanup routine.
 let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
 
-" s:clean_dirs     - temporary output directory names {{{1
+" s:clean_dirs     - temporary output directory names    {{{1
 
 ""
 " Names of temporary directories created during pandoc output.
 let s:clean_dirs = ['.tmp']
+
+" s:register       - details of markdown buffers    {{{1
+
+""
+" Details of markdown buffers. Has the structure:
+" [
+"   {
+"     'filepath': FILEPATH,
+"      'bufname': BUFFER_NAME,
+"        'bufnr': BUFFER_NUMBER,
+"     'filetype': FILETYPE},
+"   ...
+" ]
+" BUFFER_NAME and BUFFER_NUMBER are the values reported by |bufname()| and
+" |bufnr()|, respectively. BUFFER_NAME may differ from FILEPATH since the
+" latter has been processed by the |simplify()|, |resolve()| and |expand()|
+" functions.
+let s:register = []
 " }}}1
 
 " Script functions
@@ -252,9 +270,7 @@ function! s:clean_output(...) abort
         endif
     endfor
     if empty(l:fps_for_deletion) && empty(l:dirs_for_deletion)
-        if l:verbose
-            echo 'No output to clean up'
-        endif
+        if l:verbose | echo 'No output to clean up' | endif
         return
     endif
     " confirm deletion if necessary
@@ -423,9 +439,62 @@ endfunction
 
 " Private functions
 
+" dn#md_util#_register(filepath, filetype)    {{{1
+
+""
+" @private
+" Registers the {filepath} of the buffer file if the {filetype} is markdown.
+" Note there are dialects of markdown and the filetype value of a markdown
+" file may simply be "markdown" or may be something like "markdown.pandoc".
+function! dn#md_util#_register(fp, ft)
+    if empty(a:fp) | return | endif  " not a file buffer
+    if a:ft =~# '^markdown'  " is a markdown buffer
+        let l:registered = 0
+        for l:item in s:register
+            if l:item['filepath'] ==# a:fp | let l:registered = 1 | endif
+        endfor
+        if !l:registered
+            let l:new_item = {'filetype': a:fp,
+                        \     'bufname' : bufname('%'),
+                        \     'bufnr'   : bufnr('%'),
+                        \     'filetype': a:ft}
+            call add(s:register, l:new_item)
+        endif
+    else  " not a markdown buffer
+        " must handle edge case where markdown buffer changed to another
+        " filetype:
+        " - use blunt force approach of checking entire register
+        " - if register entry no longer matches any buffer, remove and clean
+        let l:no_buffer_found = []
+        " find registered bufnames with no corresponding buffers
+        for l:item in s:register
+            let l:bufname = l:item['bufname']
+            if !bufexists(l:bufname)
+                call add(l:no_buffer_found, l:bufname)
+            endif
+        endfor
+        " for each orphaned bufname, delete register entry and clean up dir
+        for l:bufname in l:no_buffer_found
+            let l:index = 0
+            while l:index < len(s:register)
+                if s:register[l:index]['bufname'] ==# l:bufname
+                    " TODO: add function call to check output
+                    call remove(s:register, l:index)
+                else
+                    let l:index += 1
+                endif
+            endwhile
+        endfor
+    endif
+endfunction
+
+function! dn#md_util#_show_register()
+    echo s:register
+endfunction
+
 " Public functions
 
-" dn#md_utils#addBoilerplate([insert])    {{{1
+" dn#md_util#addBoilerplate([insert])    {{{1
 
 ""
 " @public
@@ -434,7 +503,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_utils#addBoilerplate(...) abort
+function! dn#md_util#addBoilerplate(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -460,7 +529,7 @@ function! dn#md_utils#addBoilerplate(...) abort
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
-" dn#md_utils#insertFigure([insert])    {{{1
+" dn#md_util#insertFigure([insert])    {{{1
 
 ""
 " @public
@@ -469,7 +538,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_utils#insertFigure(...) abort
+function! dn#md_util#insertFigure(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -481,7 +550,7 @@ function! dn#md_utils#insertFigure(...) abort
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
-" dn#md_utils#panzerifyMetadata([insert])    {{{1
+" dn#md_util#panzerifyMetadata([insert])    {{{1
 
 ""
 " @public
@@ -491,7 +560,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_utils#panzerifyMetadata(...) abort
+function! dn#md_util#panzerifyMetadata(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -550,7 +619,7 @@ function! dn#md_utils#panzerifyMetadata(...) abort
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
 
-" dn#md_utils#cleanOutput([args])    {{{1
+" dn#md_util#cleanOutput([args])    {{{1
 
 ""
 " @public
@@ -570,13 +639,13 @@ endfunction
 " "command" ignore any accompanying "caller_arg".
 "
 " @default args={'insert': 0, 'caller': '', 'caller_arg': ''}
-function! dn#md_utils#cleanOutput(...) abort
+function! dn#md_util#cleanOutput(...) abort
     " may be called by autocmd with universal pattern
     if &filetype !~# '^markdown' | return | endif
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
-    let l:fn = 'dn#md_utils#cleanOutput'
+    let l:fn = 'dn#md_util#cleanOutput'
     " params
     let l:insert = g:dn_false
     let l:caller = ''
