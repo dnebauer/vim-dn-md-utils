@@ -5,7 +5,9 @@ let s:loaded = 1
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
-" }}}1
+
+" Documentation    {{{1
+" - vimdoc does not automatically generate autocmds section
 
 ""
 " @section Autocommands, autocmds
@@ -14,8 +16,11 @@ set cpoptions&vim
 " autocmds for the |FileType|, |BufDelete| and |VimLeavePre| events. All
 " autocmds created by this ftplugin are assigned to augroup "dn_markdown".
 
-" Clean output on exit    {{{1
+" }}}1
 
+" Autocommands
+
+" Clean output on exit    {{{1
 augroup dn_markdown
     autocmd!
     autocmd BufDelete * call dn#md_utils#cleanOutput(
