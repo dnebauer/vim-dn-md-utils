@@ -28,6 +28,7 @@ yaml-metadata block at the top of a document (with links collected at the
 bottom of a document) using panzer styles.
 
 DEPENDENCIES
+
 Pandoc is used to generate output. It is not provided by this ftplugin. This
 ftplugin depends on the |vim-pandoc| plugin and assumes panzer
 (https://github.com/msprev/panzer) is installed and configured.
@@ -46,7 +47,13 @@ to specify the latex engine from "--latex-engine" to "--pdf-engine".
 CONFIGURATION                                             *dn-md-utils-config*
 
                                                        *b:disable_dn_md_utils*
-Disables this plugin if set to a true value.
+Prevents this plugin loading if set to a true value before this plugin would
+normally load.
+
+                                                        *b:dn_md_no_autoclean*
+Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
+deleted or vim exits. For more information see |dn#util#cleanBuffer()|,
+|dn#util#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
 
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
@@ -55,6 +62,7 @@ The major features of this plugin are support for yaml metadata blocks, adding
 figures, and cleaning up output file and directories.
 
 METADATA
+
 Pandoc-flavoured markdown uses a yaml-style metadata block at the top of the
 file to specify values used by pandoc for document processing. With panzer
 (https://github.com/msprev/panzer) installed the metadata block can also
@@ -81,17 +89,18 @@ boilerplate for this is:
        [source]:
 <
 The default metadata block and reference link definitions are added to a
-document by the function |dn#md_utils#addBoilerplate()|, which can be called
+document by the function |dn#md_util#addBoilerplate()|, which can be called
 using the command |:MUAddBoilerplate| and mapping "<Leader>ab" (see
 |dn-md-utils-mappings|).
 
 Previously created markdown files have yaml metadata blocks that do not use
 panzer. Those metadata blocks can be "panzerified" using the
-|dn#md_utils#panzerifyMetadata()| function, which can be called using the
+|dn#md_util#panzerifyMetadata()| function, which can be called using the
 command |:MUPanzerifyMetadata| and mapping "<Leader>pm" (see
 |dn-md-utils-mappings|).
 
 IMAGES
+
 A helper function, mapping and command are provided to assist with adding
 figures. They assume the images are defined using reference links with
 optional attributes, and that all reference links are added to the end of the
@@ -112,10 +121,11 @@ document prefixed with three spaces. For example:
        {#fig:packed .class width="50%"}
 <
 A figure is inserted on the following line using the
-|dn#md_utils#insertFigure()| function, which can be called using the command
+|dn#md_util#insertFigure()| function, which can be called using the command
 |:MUInsertFigure| and mapping "<Leader>fig" (see |dn-md-utils-mappings|).
 
 OUTPUT
+
 This plugin does not assist with generation of output, but does provide a
 mapping, command and function for deleting output files and temporary output
 directories. The term "clean" is used, as in the makefile keyword that deletes
@@ -126,7 +136,7 @@ directory searched for items to delete is the directory in which the file in
 the current buffer is located.
 
 If the file being edited is FILE.ext, the files that will be deleted have
-names like "FILE.html" and "FILE.pdf" (see |dn#md_utils#cleanOutput()| for a
+names like "FILE.html" and "FILE.pdf" (see |dn#md_util#cleanBuffer()| for a
 complete list). The temporary output subdirectory ".tmp" will also be
 recursively force deleted. Warning: This plugin does not check that it is safe
 to delete files and directories identified for deletion. For example, it does
@@ -140,30 +150,61 @@ user whether to delete them. If the user confirms deletion they are removed.
 When vim exits (actually, when the |VimLeavePre| event occurs) the plugin
 looks for any markdown buffers and looks in their respective directories for
 output files/directories and, if any are found, asks the user whether to
-delete them.
+delete them. See |dn-md-utils-autocmds| for further details.
 
-Output files and directories can be deleted at any time by using the
-|dn#md_utils#cleanOutput()| function, which can be called using the command
-|:MUCleanOutput| and mapping "<Leader>co" (see |dn-md-utils-mappings|).
+Output files and directories associated with the current buffer can be deleted
+at any time by using the |dn#md_util#cleanBuffer()| function, which can be
+called using the command |:MUCleanOutput| and mapping "<Leader>co" (see
+|dn-md-utils-mappings|).
 
 ==============================================================================
 FUNCTIONS                                              *dn-md-utils-functions*
 
-dn#md_utils#addBoilerplate([insert])            *dn#md_utils#addBoilerplate()*
+dn#md_util#addBoilerplate([insert])              *dn#md_util#addBoilerplate()*
   Adds panzer/markdown boilerplate to the top and bottom of the document.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
 
-dn#md_utils#insertFigure([insert])                *dn#md_utils#insertFigure()*
+dn#md_util#cleanAllBuffers([insert])            *dn#md_util#cleanAllBuffers()*
+  Deletes common output artefacts: output files with extensions like "html"
+  and "pdf", and temporary directories like ".tmp". (See
+  |dn#util#cleanBuffer()| for a complete list.)
+
+  Searches sequentially through all buffers that are both associated with a
+  file name and have a markdown file type. When output artefacts are located
+  the user is asked for confirmation before deletion.
+
+  The [insert] argument has a boolean value which determines whether or not
+  the function was entered from insert mode.
+  [insert] is 0 if omitted.
+
+dn#md_util#cleanBuffer({buffer_number}, [confirm], [insert])
+                                                    *dn#md_util#cleanBuffer()*
+  Deletes common output artefacts: output files with extensions "htm", "html",
+  "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+
+  Searches for output located in the file directory associated with buffer
+  {buffer_number}.
+
+  If [confirm] is true, the user will be asked for confirmation before
+  deleting output artefacts. (If there are no artefacts the user is not asked
+  for confirmation.)
+  [confirm] is 0 if omitted.
+
+  The [insert] argument has a boolean value which determines whether or not
+  the function was entered from insert mode.
+  [insert] is 0 if omitted.
+
+dn#md_util#insertFigure([insert])                  *dn#md_util#insertFigure()*
   Inserts a figure on a new line.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
 
-dn#md_utils#panzerifyMetadata([insert])      *dn#md_utils#panzerifyMetadata()*
+dn#md_util#panzerifyMetadata([insert])        *dn#md_util#panzerifyMetadata()*
   Adds a line to the initial metadata block, if present, for panzer styles.
   Intended for use when converting from plain pandoc to pandoc-plus-panzer.
 
@@ -171,43 +212,23 @@ dn#md_utils#panzerifyMetadata([insert])      *dn#md_utils#panzerifyMetadata()*
   entered from insert mode.
   [insert] is false if omitted.
 
-dn#md_utils#cleanOutput([args])                    *dn#md_utils#cleanOutput()*
-  Deletes common output artefacts: output files with extensions "htm", "html",
-  "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
-
-  Arguments are provided in optional |Dictionary| [args]. There are three
-  valid keys for this dictionary: "insert", "caller" and "caller_arg".
-
-  The "insert" key has a boolean value which determines whether or not the
-  function was entered from insert mode.
-
-  The "caller" key value provides the calling context. This can be one of
-  "mapping", "command" or "autocmd". An argument can be provided for the
-  caller: this is the value for the "caller_arg" key. The caller "autocmd"
-  expects a file path "caller_arg". The caller arguments "mapping" and
-  "command" ignore any accompanying "caller_arg".
-
-  [args] is {'insert': 0, 'caller': '', 'caller_arg': ''} if omitted.
-
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*
 
 :[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
-  Calls |dn#md_utils#addBoilerplate()| to add a metadata header template,
+  Calls |dn#md_util#addBoilerplate()| to add a metadata header template,
   including title, author, date, and (panzer) styles, and a footer template
   for url reference links.
 
 :[N]MUCleanOutput                                             *:MUCleanOutput*
-  Calls |dn#md_utils#cleanOutput()| to delete output files and temporary
-  output directories. (The |Dictionary| argument includes the "caller" key
-  with a value of "command" but does not include the "caller_arg" or "insert"
-  keys.
+  Calls |dn#md_util#cleanBuffer()| to delete output files and temporary output
+  directories. The user is not asked for confirmation before deletion.
 
 :[N]MUInsertFigure                                           *:MUInsertFigure*
-  Calls |dn#md_utils#insertFigure()| to insert a figure on the following line.
+  Calls |dn#md_util#insertFigure()| to insert a figure on the following line.
 
 :[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
-  Calls |dn#md_utils#panzerifyMetadata()| to add a line to the document's
+  Calls |dn#md_util#panzerifyMetadata()| to add a line to the document's
   metadata block for panzer styles.
 
 ==============================================================================
@@ -217,19 +238,19 @@ The following mappings are provided for both |Insert-mode| and |Normal-mode|:
 
 <Leader>ab
   * add markdown boilerplate
-  * calls |dn#md_utils#addBoilerplate()|
+  * calls |dn#md_util#addBoilerplate()|
 
 <Leader>pm
   * convert yaml metadata block to use panzer
-  * calls |dn#md_utils#panzerifyMetadata()|
+  * calls |dn#md_util#panzerifyMetadata()|
 
 <Leader>fig
   * insert figure on the following line
-  * calls |dn#md_utils#insertFigure()|
+  * calls |dn#md_util#insertFigure()|
 
 <Leader>co
   * clean output files and temporary directories
-  * calls |dn#md_utils#cleanOutput()|
+  * calls |dn#md_util#cleanBuffer()|
 
 ==============================================================================
 VARIABLES                                                   *dn-md-utils-vars*
@@ -241,10 +262,19 @@ ftplugin.
 ==============================================================================
 AUTOCOMMANDS                                            *dn-md-utils-autocmds*
 
-Clean output files and directories when buffer deleted (if markdown file type)
-or vim exits (for all buffers of markdown file type). Involves autocmds for
-the |FileType|, |BufDelete| and |VimLeavePre| events. All autocmds created by
-this ftplugin are assigned to augroup "dn_markdown".
+This plugin is configured to automatically clean output files and directories
+associated with the current buffer when it is deleted (provided it is of
+markdown file type), and to automatically clean output files and directories
+associated with all markdown file buffers when vim exits. In all case the user
+is asked for confirmation before any files or directories are deleted.
+
+For more information on automatic cleaning see |dn#util#cleanBuffer()|.
+
+The autocmds responsible for this behaviour can be found in the "dn_markdown"
+autocmd group (see |autocmd-groups|) and can be viewed (see |autocmd-list|).
+
+Automatic cleaning on buffer and vim exit can be configured with
+|b:dn_md_no_autoclean|.
 
 
 vim:tw=78:ts=8:ft=help:norl:

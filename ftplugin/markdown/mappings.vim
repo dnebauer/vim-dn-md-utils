@@ -28,7 +28,7 @@ set cpoptions&vim
 "
 " <Leader>co
 "   * clean output files and temporary directories
-"   * calls @function(dn#md_util#cleanOutput)
+"   * calls @function(dn#md_util#cleanBuffer)
 
 " }}}1
 
@@ -54,19 +54,18 @@ nmap <buffer> <unique> <Plug>DnABN
 " \co  - clean output    {{{1
 
 ""
-" Calls @function(dn#md_util#cleanOutput) from |Insert-mode| and
+" Calls @function(dn#md_util#cleanBuffer) from |Insert-mode| and
 " |Normal-mode| to delete output files and temporary output directories.
 if !hasmapto('<Plug>DnCOI')
     imap <buffer> <unique> <LocalLeader>co <Plug>DnCOI
 endif
 imap <buffer> <unique> <Plug>DnCOI
-            \ <Esc>:call dn#md_util#cleanOutput(
-            \ {'caller': 'mapping', 'insert': g:dn_true})<CR>
+            \ <Esc>:call dn#md_util#cleanBuffer(bufnr('%'), 0, 1)<CR>
 if !hasmapto('<Plug>DnCON')
     nmap <buffer> <unique> <LocalLeader>co <Plug>DnCON
 endif
 nmap <buffer> <unique> <Plug>DnCON
-            \ :call dn#md_util#cleanOutput({'caller': 'mapping'})<CR>
+            \ :call dn#md_util#cleanBuffer(bufnr('%'), 0, 0)<CR>
 
 " \fig - insert figure    {{{1
 

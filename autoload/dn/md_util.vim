@@ -1,5 +1,5 @@
 " Vim ftplugin for markdown
-" Last change: 2018 Jul 26
+" Last change: 2018 Jul 28
 " Maintainer: David Nebauer
 " License: CC0
 
@@ -21,6 +21,7 @@
 " bottom of a document) using panzer styles.
 "
 " @subsection Dependencies
+"
 " Pandoc is used to generate output. It is not provided by this ftplugin.
 " This ftplugin depends on the |vim-pandoc| plugin and assumes panzer
 " (https://github.com/msprev/panzer) is installed and configured.
@@ -42,6 +43,7 @@
 " adding figures, and cleaning up output file and directories.
 "
 " @subsection Metadata
+"
 " Pandoc-flavoured markdown uses a yaml-style metadata block at the top of the
 " file to specify values used by pandoc for document processing. With panzer
 " (https://github.com/msprev/panzer) installed the metadata block can also
@@ -79,6 +81,7 @@
 " @section(mappings)).
 "
 " @subsection Images
+"
 " A helper function, mapping and command are provided to assist with adding
 " figures. They assume the images are defined using reference links with
 " optional attributes, and that all reference links are added to the end of
@@ -104,6 +107,7 @@
 " @section(mappings)).
 "
 " @subsection Output
+"
 " This plugin does not assist with generation of output, but does provide a
 " mapping, command and function for deleting output files and temporary output
 " directories. The term "clean" is used, as in the makefile keyword that
@@ -114,13 +118,13 @@
 " the current buffer is located.
 "
 " If the file being edited is FILE.ext, the files that will be deleted have
-" names like "FILE.html" and "FILE.pdf" (see
-" @function(dn#md_util#cleanOutput) for a complete list). The temporary
-" output subdirectory ".tmp" will also be recursively force deleted. Warning:
-" This plugin does not check that it is safe to delete files and directories
-" identified for deletion. For example, it does not check whether any of them
-" are symlinks to other locations. Also be aware that directories are forcibly
-" and recursively deleted, as with the *nix shell command "rm -fr".
+" names like "FILE.html" and "FILE.pdf" (see @function(dn#md_util#cleanBuffer)
+" for a complete list). The temporary output subdirectory ".tmp" will also be
+" recursively force deleted. Warning: This plugin does not check that it is
+" safe to delete files and directories identified for deletion. For example,
+" it does not check whether any of them are symlinks to other locations. Also
+" be aware that directories are forcibly and recursively deleted, as with the
+" *nix shell command "rm -fr".
 "
 " When a markdown buffer is closed (actually when the |BufDelete| event
 " occurs), the plugin checks for output files/directories and, if any are
@@ -128,20 +132,50 @@
 " they are removed. When vim exits (actually, when the |VimLeavePre| event
 " occurs) the plugin looks for any markdown buffers and looks in their
 " respective directories for output files/directories and, if any are found,
-" asks the user whether to delete them.
+" asks the user whether to delete them. See @section(autocmds) for further
+" details.
 " 
-" Output files and directories can be deleted at any time by using the
-" @function(dn#md_util#cleanOutput) function, which can be called using the
-" command @command(MUCleanOutput) and mapping "<Leader>co" (see
-" @section(mappings)).
+" Output files and directories associated with the current buffer can be
+" deleted at any time by using the @function(dn#md_util#cleanBuffer) function,
+" which can be called using the command @command(MUCleanOutput) and mapping
+" "<Leader>co" (see @section(mappings)).
 
 ""
 " @setting b:disable_dn_md_utils
-" Disables this plugin if set to a true value.
+" Prevents this plugin loading if set to a true value before this plugin would
+" normally load.
 
 " }}}1
 
 " Script variables
+
+" s:clean_dirs     - temporary output directory names    {{{1
+
+""
+" Names of temporary directories created during pandoc output.
+let s:clean_dirs = ['.tmp']
+
+" s:clean_suffixes - suffixes of output files    {{{1
+
+""
+" Suffixes of output files that will be deleted by cleanup routine.
+let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
+
+" s:md_filetypes   - valid markdown filetypes    {{{1
+
+""
+" List of valid markdown filetypes.
+"
+let s:md_filetypes = ['markdown', 'markdown.pandoc', 'pandoc']
+
+" s:metadata_style - metadata skeleton for panzer styles    {{{1
+
+""
+" Metadata skeleton for panzer styles.
+let s:metadata_style = [
+            \ 'style:  [Standard, Latex14pt]',
+            \ '        # Latex8-12|14|17|20pt; PaginateSections; InludeFiles'
+            \ ]
 
 " s:metadata_triad - metadata skeleton for title/author/date    {{{1
 
@@ -151,15 +185,6 @@ let s:metadata_triad = [
             \ 'title:  "[][source]"',
             \ 'author: "[][author]"',
             \ 'date:   ""'
-            \ ]
-
-" s:metadata_style - metadata skeleton for panzer styles    {{{1
-
-""
-" Metadata skeleton for panzer styles.
-let s:metadata_style = [
-            \ 'style:  [Standard, Latex14pt]',
-            \ '        # Latex8-12|14|17|20pt; PaginateSections; InludeFiles'
             \ ]
 
 " s:refs           - skeleton for url comment block    {{{1
@@ -175,150 +200,93 @@ let s:refs = [
             \ '   [source]: '
             \ ]
 
-" s:clean_suffixes - suffixes of output files    {{{1
-
-""
-" Suffixes of output files that will be deleted by cleanup routine.
-let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
-
-" s:clean_dirs     - temporary output directory names    {{{1
-
-""
-" Names of temporary directories created during pandoc output.
-let s:clean_dirs = ['.tmp']
-
-" s:register       - details of markdown buffers    {{{1
-
-""
-" Details of markdown buffers. Has the structure:
-" [
-"   {
-"     'filepath': FILEPATH,
-"      'bufname': BUFFER_NAME,
-"        'bufnr': BUFFER_NUMBER,
-"     'filetype': FILETYPE},
-"   ...
-" ]
-" BUFFER_NAME and BUFFER_NUMBER are the values reported by |bufname()| and
-" |bufnr()|, respectively. BUFFER_NAME may differ from FILEPATH since the
-" latter has been processed by the |simplify()|, |resolve()| and |expand()|
-" functions.
-let s:register = []
 " }}}1
 
 " Script functions
 
-" s:clean_output([caller[, caller_arg]])    {{{1
+" s:clean_output(buffer_number, [confirm])    {{{1
 
 ""
 " @private
-" Deletes common output artefacts: output files with extensions "htm", "html",
-" "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+" Deletes common output artefacts: output files with extensions like "html"
+" and "pdf", and temporary directories like ".tmp". (See
+" @function(dn#util#cleanOutput) for a complete list.)
 "
-" The [caller] argument provides the calling context. This can be one of
-" "mapping", "command" or "autocmd". An argument can be provided for the
-" caller: this is the [caller_arg]. The [caller] "autocmd" expects a file path
-" [caller_arg]. The [caller] arguments "mapping" and "command" ignore any
-" accompanying [caller_arg].
+" Obtains file path associated with the buffer identified by {buffer_number}.
+" From this file path obtains the file directory and basename of output files.
+" Function exits if there is no file associated with the buffer (because
+" pandoc will not create output for it).
 "
-" @default caller=""
-" @default caller_arg=""
-function! s:clean_output(...) abort
-    " get path components; involves params
-    let l:fp = resolve(expand('%:p'))
-    let l:on_buf_close = g:dn_false
-    let l:verbose = g:dn_true
-    if a:0 > 0
-        " process caller (first param)
-        let l:valid_callers = ['mapping', 'command', 'autocmd']
-        let l:caller = a:1
-        if !count(l:valid_callers, l:caller)
-            call dn#util#error('Invalid caller: "' . l:caller . '"')
-            return
-        endif
-        " process caller arg (second param) depending on caller
-        " - note that 'mapping' and 'command' callers ignore arg,
-        "   and also have no effect whatsoever
-        if l:caller ==# 'autocmd'
-            if !empty(a:2)
-                let l:fp = simplify(resolve(expand(a:2)))
-                let l:on_buf_close = g:dn_true
-                let l:verbose = g:dn_false
-            endif
-        endif
-    endif
-    if empty(l:fp)
-        if l:verbose | call dn#util#error('Buffer is not a file!') | endif
-        return
-    endif
-    let l:dir = fnamemodify(l:fp, ':h')
-    let l:file = fnamemodify(l:fp, ':t')
-    let l:base = fnamemodify(l:file, ':r')
+" See @function(a:valid_bufnr) for notes on how buffer number is checked.
+"
+" If [confirm] is true the user will be asked for confirmation before anything
+" is deleted. (No confirmation is necessary if there is nothing to delete.)
+" @default confirm=0
+function! s:clean_output(bufnr, ...) abort
+    " check params
+    if !s:valid_bufnr(a:bufnr) | return | endif
+    let l:confirm = (a:0 && a:1)
     " identify deletion candidates
-    let l:fps_for_deletion = []
-    let l:dirs_for_deletion = []
-    for l:suffix in s:clean_suffixes
-        let l:candidate = l:dir . '/' . l:base . '.' . l:suffix
-        if filereadable(l:candidate)
-            call add(l:fps_for_deletion, l:candidate)
-        endif
-    endfor
-    for l:subdir in s:clean_dirs
-        let l:candidate = l:dir . '/' . l:subdir
-        if isdirectory(l:candidate)
-            call add(l:dirs_for_deletion, l:candidate)
-        endif
-    endfor
-    if empty(l:fps_for_deletion) && empty(l:dirs_for_deletion)
-        if l:verbose | echo 'No output to clean up' | endif
+    let l:filepath = simplify(resolve(fnamemodify(bufname(a:bufnr), ':p')))
+    let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
+    if empty(l:fps) && empty(l:dirs)
+        echo 'No output to clean up'
         return
     endif
     " confirm deletion if necessary
-    if l:on_buf_close
-        let l:to_delete = l:fps_for_deletion + l:dirs_for_deletion
-        echo 'Output files and/or dirs detected: ' . join(l:to_delete, ', ')
-        echohl Question
-        echo 'Delete them? [y/N] '
-        echohl None
-        let l:char = nr2char(getchar())
-        echon l:char
-        if l:char !=? 'y' | return | endif
+    if l:confirm
+        echo 'Dir: ' . fnamemodify(l:filepath, ':h')
+        echo 'Output artefacts detected: ' . join(l:fps + l:dirs, ', ')
+        if !s:confirm('Delete output? [y/N] ') | return | endif
     endif
     " delete files/dirs
-    let l:deleted = []
-    let l:failed = []
-    for l:fp in l:fps_for_deletion
-        let l:result = delete(l:fp)
-        if     l:result == 0  " success
-            call add(l:deleted, fnamemodify(l:fp, ':t'))
-        elseif l:result == -1  " (partial) failure
-            call add(l:failed, l:fp)
-        else
-            " should not be possible
-            call dn#util#error('Unable to delete ' . l:fp)
-        endif
-    endfor
-    for l:dir in l:dirs_for_deletion
-        let l:result = delete(l:dir, 'rf')  " delete recursively!!
-        if     l:result == 0  " success
-            call add(l:deleted, fnamemodify(l:dir, ':t'))
-        elseif l:result == -1  " (partial) failure
-            call add(l:failed, l:dir)
-        else
-            " should not be possible
-            call dn#util#error('Unable to recursively force delete ' . l:dir)
-        endif
-    endfor
+    let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
     " report outcome
-    if !empty(l:deleted) && !l:on_buf_close
-        echo 'Deleted ' . join(l:deleted, ', ')
-    endif
-    if !empty(l:failed)
-        call dn#util#error('Errors occurred trying to delete:')
-        for l:path in l:failed
-            call dn#util#error('- ' . l:path)
-        endfor
-    endif
+    call s:report_clean(l:deleted, l:failed)
+endfunction
+
+" s:confirm(question)    {{{1
+
+""
+" @private
+" Asks user a {question} to be answered with a 'y' or 'n'.
+function! s:confirm(question, ...) abort
+    echohl Question
+    echo a:question
+    echohl None
+    let l:char = nr2char(getchar())
+    echon l:char
+    return (l:char ==? 'y')
+endfunction
+
+" s:delete_output(filepaths, directories)    {{{1
+
+""
+" @private
+" Attempts to delete {filepaths} and {directories}. Returns a list of
+" successfully deleted files and directories, and a list of items that could
+" not be deleted.
+"
+" Note in this function that the return value from |delete()| is not boolean;
+" it returns 0 if successful and -1 if the deletion fails or partly fails.
+function! s:delete_output(fps, dirs) abort
+    let l:deleted = [] | let l:failed = []
+    for l:fp in a:fps
+        let l:result = delete(l:fp)
+        if     l:result == 0  | call add(l:deleted, fnamemodify(l:fp, ':t'))
+        elseif l:result == -1 | call add(l:failed, l:fp)
+        else | call dn#util#error('Unable to delete ' . l:fp)
+        endif
+    endfor
+    for l:dir in a:dirs
+        let l:result = delete(l:dir, 'rf')  " delete recursively!!
+        if     l:result == 0  | call add(l:deleted, fnamemodify(l:dir, ':t'))
+        elseif l:result == -1 | call add(l:failed, l:dir)
+        else | call dn#util#error('Unable to force delete ' . l:dir)
+        endif
+    endfor
+    " return outcome
+    return [l:deleted, l:failed]
 endfunction
 
 " s:insert_figure()    {{{1
@@ -421,6 +389,61 @@ function! s:insert_figure() abort
     call setpos('.', l:pos)
 endfunction
 
+" s:md_filetype(filetype)    {{{1
+
+""
+" @private
+" Determine whether {filetype} is a valid markdown filetype.
+function! s:md_filetype(filetype)
+    if empty(a:filetype) | return | endif
+    return count(s:md_filetypes, a:filetype)
+endfunction
+
+" s:output_artefacts(filepath)    {{{1
+
+""
+" @private
+" Finds common output artefacts, i.e., output files with extensions like
+" "html" and "pdf", and temporary directories like ".tmp". (See
+" @function(dn#util#cleanBuffer) for a complete list.) Uses directory and base
+" name from {filepath}.
+function! s:output_artefacts(filepath) abort
+    let l:filepath = simplify(fnamemodify(a:filepath, ':p'))
+    let l:dir = fnamemodify(l:filepath, ':h')
+    let l:file = fnamemodify(l:filepath, ':t')
+    let l:base = fnamemodify(l:file, ':r')
+    " identify deletion candidates
+    let l:fps = [] | let l:dirs = []
+    for l:suffix in s:clean_suffixes
+        let l:candidate = l:dir . '/' . l:base . '.' . l:suffix
+        if filereadable(l:candidate) | call add(l:fps, l:candidate) | endif
+    endfor
+    for l:subdir in s:clean_dirs
+        let l:candidate = l:dir . '/' . l:subdir
+        if isdirectory(l:candidate) | call add(l:dirs, l:candidate) | endif
+    endfor
+    return [l:fps, l:dirs]
+endfunction
+
+" s:report_clean(deleted, failed)    {{{1
+
+""
+" @private
+" Report on outcome of output cleaning. The report is based on a list of
+" [deleted] files and directories, and a list of files and directories that
+" [failed] to be deleted.
+function! s:report_clean(deleted, failed) abort
+    if !empty(a:deleted)
+        echo 'Deleted ' . join(a:deleted, ', ')
+    endif
+    if !empty(a:failed)
+        call dn#util#error('Errors occurred trying to delete:')
+        for l:path in a:failed
+            call dn#util#error('- ' . l:path)
+        endfor
+    endif
+endfunction
+
 " s:utils_missing()    {{{1
 
 ""
@@ -435,63 +458,50 @@ function! s:utils_missing() abort
         return g:dn_true
     endif
 endfunction
-" }}}1
 
-" Private functions
-
-" dn#md_util#_register(filepath, filetype)    {{{1
+" s:valid_bufnr(buffer_number)    {{{1
 
 ""
 " @private
-" Registers the {filepath} of the buffer file if the {filetype} is markdown.
-" Note there are dialects of markdown and the filetype value of a markdown
-" file may simply be "markdown" or may be something like "markdown.pandoc".
-function! dn#md_util#_register(fp, ft)
-    echo 'Filepath: "' . a:fp . '", filetype: "' . a:ft . '"'
-    if empty(a:fp) | return | endif  " not a file buffer
-    if a:ft =~# '^markdown'  " is a markdown buffer
-        let l:registered = 0
-        for l:item in s:register
-            if l:item['filepath'] ==# a:fp | let l:registered = 1 | endif
-        endfor
-        if !l:registered
-            let l:new_item = {'filepath': a:fp,
-                        \     'bufname' : bufname('%'),
-                        \     'bufnr'   : bufnr('%'),
-                        \     'filetype': a:ft}
-            call add(s:register, l:new_item)
-        endif
-    else  " not a markdown buffer
-        " must handle edge case where markdown buffer changed to another
-        " filetype:
-        " - use blunt force approach of checking entire register
-        " - if register entry no longer matches any buffer, remove and clean
-        let l:no_buffer_found = []
-        " find registered bufnames with no corresponding buffers
-        for l:item in s:register
-            let l:bufname = l:item['bufname']
-            if !bufexists(l:bufname)
-                call add(l:no_buffer_found, l:bufname)
-            endif
-        endfor
-        " for each orphaned bufname, delete register entry and clean up dir
-        for l:bufname in l:no_buffer_found
-            let l:index = 0
-            while l:index < len(s:register)
-                if s:register[l:index]['bufname'] ==# l:bufname
-                    " TODO: add function call to check output
-                    call remove(s:register, l:index)
-                else
-                    let l:index += 1
-                endif
-            endwhile
-        endfor
+" Checks that a buffer number is valid.
+"
+" Note that some buffers can exist but not be visible with the |:ls| command.
+" For that reason this function checks that the supplied buffer number both
+" exists and is associated with a file. For the purposes of this plugin a
+" buffer number is invalid if it is not associated with a file name. This
+" aligns with the behaviour of pandoc since it will not generate output if a
+" buffer is not associated with a file. This also means an error will be
+" generated for the edge case where a user has created a buffer and set a
+" markdown filetype, but not saved the buffer as a file.
+"
+" For the purposes of this plugin a buffer is also invalid if it does not have
+" a markdown filetype.
+function! s:valid_bufnr(bufnr) abort
+    " check params
+    if type(a:bufnr) != v:t_number  " check bufnr data type
+        call dn#util#error('Expected buffer number, got "' . a:bufnr . '"')
+        return
     endif
+    if !bufexists(a:bufnr)  " check bufnr exists
+        call dn#util#error('Buffer ' . a:bufnr . ' does not exist')
+        return
+    endif
+    if empty(bufname(a:bufnr))  " check buffer associated with a file
+        call dn#util#error('No file associated with buffer ' . a:bufnr)
+        return
+    endif
+    let l:ft = getbufvar(a:bufnr, '&filetype')  " check buffer file type
+    if !s:md_filetype(l:ft)
+        let l:msg = 'Buffer ' . a:bufnr . ' has non-md filetype: ' . l:ft
+        call dn#util#error(l:msg)
+        return
+    endif
+    " valid if survived tests
+    return 1
 endfunction
+" }}}1
 
-function! dn#md_util#_show_register()
-    echo s:register
-endfunction
+" Private functions
 
 " Public functions
 
@@ -526,6 +536,69 @@ function! dn#md_util#addBoilerplate(...) abort
         call setpos('.', l:pos)
         redraw!
     endtry
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_util#cleanAllBuffers([insert])    {{{1
+
+""
+" @public
+" Deletes common output artefacts: output files with extensions like "html"
+" and "pdf", and temporary directories like ".tmp". (See
+" @function(dn#util#cleanBuffer) for a complete list.)
+"
+" Searches sequentially through all buffers that are both associated with a
+" file name and have a markdown file type. When output artefacts are located
+" the user is asked for confirmation before deletion.
+"
+" The [insert] argument has a boolean value which determines whether or not
+" the function was entered from insert mode.
+" @default insert=0
+function! dn#md_util#cleanAllBuffers(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " process params
+    let l:insert = (a:0 && a:1)
+    " cycle through buffers, acting only on those with markdown files
+    for l:bufnr in range(1, bufnr('$'))
+        if !bufexists(l:bufnr) | continue | endif
+        if empty(bufname(l:bufnr)) | continue | endif
+        if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
+        call s:clean_output(l:bufnr, 1)
+    endfor
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+endfunction
+
+" dn#md_util#cleanBuffer(buffer_number[, confirm[, insert]])    {{{1
+
+""
+" @public
+" Deletes common output artefacts: output files with extensions "htm", "html",
+" "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
+"
+" Searches for output located in the file directory associated with buffer
+" {buffer_number}.
+"
+" If [confirm] is true, the user will be asked for confirmation before
+" deleting output artefacts. (If there are no artefacts the user is not asked
+" for confirmation.)
+" @default confirm=0
+"
+" The [insert] argument has a boolean value which determines whether or not
+" the function was entered from insert mode.
+" @default insert=0
+function! dn#md_util#cleanBuffer(bufnr, ...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:confirm = (a:0 > 0 && a:1)
+    let l:insert = (a:0 > 1 && a:2)
+    " clean output files
+    call s:clean_output(a:bufnr, l:confirm)
     " return to calling mode
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
@@ -616,66 +689,6 @@ function! dn#md_util#panzerifyMetadata(...) abort
         call setpos('.', l:pos)
         redraw!
     endtry
-    " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
-endfunction
-
-" dn#md_util#cleanOutput([args])    {{{1
-
-""
-" @public
-" Deletes common output artefacts: output files with extensions "htm", "html",
-" "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
-"
-" Arguments are provided in optional |Dictionary| [args]. There are three
-" valid keys for this dictionary: "insert", "caller" and "caller_arg".
-"
-" The "insert" key has a boolean value which determines whether or not the
-" function was entered from insert mode.
-"
-" The "caller" key value provides the calling context. This can be one of
-" "mapping", "command" or "autocmd". An argument can be provided for the
-" caller: this is the value for the "caller_arg" key. The caller "autocmd"
-" expects a file path "caller_arg". The caller arguments "mapping" and
-" "command" ignore any accompanying "caller_arg".
-"
-" @default args={'insert': 0, 'caller': '', 'caller_arg': ''}
-function! dn#md_util#cleanOutput(...) abort
-    " may be called by autocmd with universal pattern
-    if &filetype !~# '^markdown' | return | endif
-    " universal tasks
-    echo '' |  " clear command line
-    if s:utils_missing() | return | endif  " requires dn-utils plugin
-    let l:fn = 'dn#md_util#cleanOutput'
-    " params
-    let l:insert = g:dn_false
-    let l:caller = ''
-    let l:caller_arg = ''
-    if a:0 > 1
-        call dn#util#error(l:fn . ': expected 1 arg, got ' . a:0)
-        return
-    endif
-    if a:0 == 1
-        if type(a:1) != v:t_dict
-            let l:type = dn#util#varType(a:1)
-            call dn#util#error(l:fn . ': expected dict param, got ' . l:type)
-            return
-        endif
-        let l:params = copy(a:1)
-        for l:param in keys(l:params)
-            let l:value = l:params[l:param]
-            if     l:param ==# 'insert'     | let l:insert = g:dn_true
-            elseif l:param ==# 'caller'     | let l:caller = l:value
-            elseif l:param ==# 'caller_arg' | let l:caller_arg = l:value
-            else
-                call dn#util#error(
-                            \ l:fn . ': invalid param key "' . l:param . '"')
-                return
-            endif
-        endfor
-    endif
-    " clean output files
-    call s:clean_output(l:caller, l:caller_arg)
     " return to calling mode
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
 endfunction
