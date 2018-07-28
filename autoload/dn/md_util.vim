@@ -13,12 +13,8 @@
 " Previously the plugin author used a personal plugin to provide markdown-
 " related functionality. That plugin was retired when the plugin author
 " switched to the |vim-pandoc| plugin and panzer framework
-" (https://github.com/msprev/panzer) for markdown support.
-"
-" This plugin is intended to address any gaps in markdown support provided by
-" those tools. It currently provides support for a pandoc-compliant
-" yaml-metadata block at the top of a document (with links collected at the
-" bottom of a document) using panzer styles.
+" (https://github.com/msprev/panzer) for markdown support. This plugin is
+" intended to address any gaps in markdown support provided by those tools.
 "
 " @subsection Dependencies
 "
