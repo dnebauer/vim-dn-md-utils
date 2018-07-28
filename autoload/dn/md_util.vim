@@ -32,6 +32,9 @@
 " ("--smart") to an extension ("--from=markdown+smart"). The second is a
 " change in the option used to specify the latex engine from "--latex-engine"
 " to "--pdf-engine".
+"
+" This plugin also depends on the vim-dn-utils plugin
+" (https://github.com/dnebauer/vim-dn-utils).
 
 ""
 " @section Features, features

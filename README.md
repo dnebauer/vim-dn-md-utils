@@ -26,6 +26,9 @@ between these versions that affect this plugin:
 |smart       |`--smart` (option)|`--from=markdown+smart` (extension)|
 |latex engine|`--latex-engine`  |`--pdf-engine`                     |
 
+This plugin also depends on the
+[vim-dn-utils](https://github.com/dnebauer/vim-dn-utils) plugin.
+
 ## Features ##
 
 A default [panzer](https://github.com/msprev/panzer)- and pandoc-compatible
