@@ -234,9 +234,9 @@ function! s:clean_output(bufnr, ...) abort
     endif
     " confirm deletion if necessary
     if l:confirm
-        echo 'Dir: ' . fnamemodify(l:filepath, ':h')
-        echo 'Output artefacts detected: ' . join(l:fps + l:dirs, ', ')
-        if !s:confirm('Delete output? [y/N] ') | return | endif
+        let l:msg = ['Dir: ' . fnamemodify(l:filepath, ':h'),
+                    \ 'Output artefacts: ' . join(l:fps + l:dirs, ', ')]
+        if !s:confirm('Delete output? [y/N] ', l:msg) | return | endif
     endif
     " delete files/dirs
     let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
@@ -244,12 +244,16 @@ function! s:clean_output(bufnr, ...) abort
     call s:report_clean(l:deleted, l:failed)
 endfunction
 
-" s:confirm(question)    {{{1
+" s:confirm(question, [preamble])    {{{1
 
 ""
 " @private
-" Asks user a {question} to be answered with a 'y' or 'n'.
+" Asks user a {question} to be answered with a 'y' or 'n'. May be preceded by
+" a [preamble], a list of strings displayed before the question.
+" @default preamble=[]
 function! s:confirm(question, ...) abort
+    let l:preamble = (a:0 && !empty(a:1)) ? a:1 : []
+    for l:msg in l:preamble | echo l:msg | endfor
     echohl Question
     echo a:question
     echohl None
