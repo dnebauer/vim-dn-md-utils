@@ -234,9 +234,11 @@ function! s:clean_output(bufnr, ...) abort
     endif
     " confirm deletion if necessary
     if l:confirm
-        let l:msg = ['Dir: ' . fnamemodify(l:filepath, ':h'),
-                    \ 'Output artefacts: ' . join(l:fps + l:dirs, ', ')]
-        if !s:confirm('Delete output? [y/N] ', l:msg) | return | endif
+        let l:artefacts = map(l:fps, function('s:filename'))
+                    \   + map(l:dirs, function('s:filename'))
+        echo 'Dir: ' . fnamemodify(l:filepath, ':h')
+        echo 'Output artefacts: ' . join(l:artefacts, ', ')
+        if !s:confirm('Delete output? [y/N] ') | return | endif
     endif
     " delete files/dirs
     let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
@@ -290,6 +292,17 @@ function! s:delete_output(fps, dirs) abort
     endfor
     " return outcome
     return [l:deleted, l:failed]
+endfunction
+
+" s:filename(key, val)    {{{1
+
+""
+" @private
+" A |Funcref| intended to be used with a |map()| function to extract a list if
+" filenames from a list of filepaths. Uses the standard |Funcref| arguments
+" {key} and {val}.
+function! s:filename(key, val)
+    return fnamemodify(a:val, ':t')
 endfunction
 
 " s:insert_figure()    {{{1
