@@ -228,8 +228,9 @@ function! s:clean_output(bufnr, ...) abort
     " identify deletion candidates
     let l:filepath = simplify(resolve(fnamemodify(bufname(a:bufnr), ':p')))
     let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
+    echo join(l:fps + l:dirs, "\n") | " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
-        echo 'No output to clean up'
+        echomsg 'No output to clean up'
         return
     endif
     " confirm deletion if necessary
@@ -253,7 +254,7 @@ endfunction
 " Asks user a {question} to be answered with a 'y' or 'n'.
 function! s:confirm(question) abort
     echohl Question
-    echo a:question
+    echomsg a:question
     echohl None
     let l:char = nr2char(getchar())
     echon l:char
@@ -459,7 +460,7 @@ endfunction
 " [failed] to be deleted.
 function! s:report_clean(deleted, failed) abort
     if !empty(a:deleted)
-        echo 'Deleted ' . join(a:deleted, ', ')
+        echomsg 'Deleted ' . join(a:deleted, ', ')
     endif
     if !empty(a:failed)
         call dn#util#error('Errors occurred trying to delete:')
