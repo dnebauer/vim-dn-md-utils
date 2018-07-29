@@ -228,8 +228,7 @@ function! s:clean_output(bufnr, ...) abort
     " identify deletion candidates
     let l:filepath = simplify(resolve(fnamemodify(bufname(a:bufnr), ':p')))
     let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
-    echo join(l:fps + l:dirs, "\n") | " DELETE LINE!
-    call s:prompt()  " DELETE LINE!
+    call s:log([fnamemodify(l:filepath, ':t')] + l:fps + l:dirs) " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
         echomsg 'No output to clean up'
         return
@@ -401,6 +400,25 @@ function! s:insert_figure() abort
     endfor
     " reset cursor position
     call setpos('.', l:pos)
+endfunction
+
+" s:log(msg)    {{{1
+
+""
+" @private
+" Write {msg} to log file ~/dn-md-log. Note that {msg} can be a string or list
+" of strings.
+function! s:log(msg)
+    let l:log = $HOME . '/dn-md-log'
+    let l:msgs = []
+    if     type(a:msg) == type('')
+        call add(l:msgs, a:msg)
+    elseif type(a:msg) == type([])
+        call extend(l:msgs, a:msg)
+    else
+        call dn#util#error('Invalid log message')
+    endif
+    call writefile(l:msgs, l:log, 'a')
 endfunction
 
 " s:md_filetype(filetype)    {{{1
