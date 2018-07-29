@@ -236,9 +236,8 @@ function! s:clean_output(bufnr, ...) abort
     if l:confirm
         let l:output = join(map(l:fps, function('s:filename'))
                     \       + map(l:dirs, function('s:filename')), ', ')
-        "echo 'Dir: ' . fnamemodify(l:filepath, ':h')
-        let l:msg = 'Delete ' . fnamemodify(l:filepath, ':t')
-                    \ . ' output (' . l:output . ') [y/N] '
+        let l:fname = fnamemodify(l:filepath, ':t')
+        let l:msg = 'Delete ' . l:fname . ' output (' . l:output . ') [y/N] '
         if !s:confirm(l:msg) | return | endif
     endif
     " delete files/dirs
@@ -438,6 +437,19 @@ function! s:output_artefacts(filepath) abort
     return [l:fps, l:dirs]
 endfunction
 
+" s:prompt()    {{{1
+
+""
+" @private
+" Prompt user to press the "Enter" key to continue.
+function! s:prompt() abort
+    let l:prompt = 'Press [Enter] to continue...'
+    echohl MoreMsg
+    call input(l:prompt)
+    echohl Normal
+    echo "\n"
+endfunction
+
 " s:report_clean(deleted, failed)    {{{1
 
 ""
@@ -599,6 +611,7 @@ function! dn#md_util#cleanAllBuffers(...) abort
         if empty(bufname(l:bufnr)) | continue | endif
         if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
         call s:clean_output(l:bufnr, 1)
+        call s:prompt()
     endfor
     " return to calling mode
     if l:insert | call dn#util#insertMode(g:dn_true) | endif
