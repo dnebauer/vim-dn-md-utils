@@ -257,7 +257,9 @@ endfunction
 " @default preamble=[]
 function! s:confirm(question, ...) abort
     let l:preamble = (a:0 && !empty(a:1)) ? a:1 : []
+    echohl MoreMsg
     for l:msg in l:preamble | echo l:msg | endfor
+    echohl None
     echohl Question
     echo a:question
     echohl None
