@@ -236,9 +236,11 @@ function! s:clean_output(bufnr, ...) abort
     if l:confirm
         let l:artefacts = join(map(l:fps, function('s:filename'))
                     \   + map(l:dirs, function('s:filename')), ', ')
-        echo 'Dir: ' . fnamemodify(l:filepath, ':h')
-        echo 'Output artefacts: ' . l:artefacts
-        if !s:confirm('Delete output? [y/N] ') | return | endif
+        "echo 'Dir: ' . fnamemodify(l:filepath, ':h')
+        "echo 'Output artefacts: ' . l:artefacts
+        let l:msg = ['Dir: ' . fnamemodify(l:filepath, ':h'),
+                    \ 'Output artefacts: ' . l:artefacts]
+        if !s:confirm('Delete output? [y/N] ', l:msg) | return | endif
     endif
     " delete files/dirs
     let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
