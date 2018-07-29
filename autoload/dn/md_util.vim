@@ -229,6 +229,7 @@ function! s:clean_output(bufnr, ...) abort
     let l:filepath = simplify(resolve(fnamemodify(bufname(a:bufnr), ':p')))
     let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
     echo join(l:fps + l:dirs, "\n") | " DELETE LINE!
+    call s:prompt()  " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
         echomsg 'No output to clean up'
         return
