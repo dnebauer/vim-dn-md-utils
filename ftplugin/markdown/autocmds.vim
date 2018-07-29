@@ -45,7 +45,7 @@ if !(exists('b:dn_md_no_autoclean') && b:dn_md_no_autoclean)
     augroup dn_markdown
         autocmd!
         autocmd BufDelete <buffer> 
-                    \ call dn#md_util#cleanBuffer(expand('<afile>'), 1, 0)
+                    \ call dn#md_util#cleanBuffer(expand('<abuf>'), 1, 0)
         autocmd VimLeavePre * 
                     \ call dn#md_util#cleanAllBuffers(0)
     augroup END
