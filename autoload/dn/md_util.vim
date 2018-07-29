@@ -481,8 +481,10 @@ endfunction
 " a markdown filetype.
 function! s:valid_bufnr(bufnr) abort
     " check params
-    if type(a:bufnr) != v:t_number  " check bufnr data type
-        call dn#util#error('Expected buffer number, got "' . a:bufnr . '"')
+    if type(a:bufnr) != type(0)  " check bufnr data type
+        let l:msg = 'Expected buffer number, got '
+                    \ . s:variable_type(a:bufnr) . ': ' . a:bufnr
+        call dn#util#error(l:msg)
         return
     endif
     if !bufexists(a:bufnr)  " check bufnr exists
@@ -501,6 +503,23 @@ function! s:valid_bufnr(bufnr) abort
     endif
     " valid if survived tests
     return 1
+endfunction
+
+" s:variable_type(variable)    {{{1
+
+""
+" @private
+" Returns the {variable} type as a string: "number", "string", "funcref",
+" "List", "Dictionary", "float", or "unknown".
+function! s:variable_type(var) abort
+    if     type(a:var) == type(0)              | return 'number'
+    elseif type(a:var) == type('')             | return 'string'
+    elseif type(a:var) == type(function('tr')) | return 'funcref'
+    elseif type(a:var) == type([])             | return 'List'
+    elseif type(a:var) == type({})             | return 'Dictionary'
+    elseif type(a:var) == type(0.0)            | return 'float'
+    else                                       | return 'unknown'
+    endif
 endfunction
 " }}}1
 
