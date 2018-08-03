@@ -269,8 +269,7 @@ function! s:clean_output(...) abort
     endif
     " confirm deletion if necessary
     if l:arg.confirm
-        let l:output = join(map(copy(l:fps), function('s:filename'))
-                    \       + map(copy(l:dirs), function('s:filename')), ', ')
+        let l:output = join(map(l:fps + l:dirs, function('rm_dir')), ', ')
         let l:fname = fnamemodify(l:md_fp, ':t')
         let l:msg = 'Delete ' . l:fname . ' output (' . l:output . ') [y/N] '
         if !s:confirm(l:msg) | return | endif
@@ -412,14 +411,15 @@ function! s:fp_exists(fp)
     return !empty(glob(a:fp))
 endfunction
 
-" s:filename(key, val)    {{{1
+" s:rm_dir(key, val)    {{{1
 
 ""
 " @private
 " A |Funcref| intended to be used with a |map()| function to extract a list if
-" filenames from a list of filepaths. Uses the standard |Funcref| arguments
+" filenames from a list of filepaths, i.e., by removing ("rm") the directory
+" portion of the filepath ("rm_dir"). Uses the standard |Funcref| arguments
 " {key} and {val}.
-function! s:filename(key, val)
+function! s:rm_dir(key, val)
     return fnamemodify(a:val, ':t')
 endfunction
 
