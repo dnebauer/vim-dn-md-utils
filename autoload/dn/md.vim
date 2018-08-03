@@ -242,6 +242,7 @@ let s:refs = [
 " 
 " @default arg={'bufnr': 0, 'confirm': false, 'pause_end': false, 'say_none': false}
 "
+" @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict arg contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
 " @throws NoFile if specified buffer has no associated file
@@ -279,6 +280,9 @@ function! s:clean_output(...) abort
     let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
     " report outcome
     call s:report_clean(l:deleted, l:failed)
+    if !empty(l:failed)
+        throw 'DelFail failed to delete ' . join(l:failed, ', ')
+    endif
     if l:arg.pause_end | call s:prompt() | endif
     return v:true  " signals action taken
 endfunction
@@ -350,25 +354,23 @@ endfunction
 ""
 " @private
 " Attempts to delete {filepaths} and {directories}. Returns a list of
-" successfully deleted files and directories, and a list of items that could
-" not be deleted.
-"
-" Note in this function that the return value from |delete()| is not boolean;
-" it returns 0 if successful and -1 if the deletion fails or partly fails.
+" successfully deleted items and a list of items that could not be deleted.
 function! s:delete_output(fps, dirs) abort
     let l:deleted = [] | let l:failed = []
+    " the return value from |delete()| is not boolean; it returns 0 if
+    " successful and -1 if the deletion fails or partly fails.
     for l:fp in a:fps
         let l:result = delete(l:fp)
-        if     l:result == 0  | call add(l:deleted, fnamemodify(l:fp, ':t'))
-        elseif l:result == -1 | call add(l:failed, l:fp)
-        else | call dn#util#error('Unable to delete ' . l:fp)
+        " @function(s:fp_exists) can fail to detect files in special
+        " circumstances, so also test return value of |delete()|
+        if l:result == -1 || s:fp_exists(l:fp) | call add(l:failed, l:fp)
+        else | call add(l:deleted, fnamemodify(l:fp, ':t'))
         endif
     endfor
     for l:dir in a:dirs
-        let l:result = delete(l:dir, 'rf')  " delete recursively!!
-        if     l:result == 0  | call add(l:deleted, fnamemodify(l:dir, ':t'))
-        elseif l:result == -1 | call add(l:failed, l:dir)
-        else | call dn#util#error('Unable to force delete ' . l:dir)
+        call delete(l:dir, 'rf')  " delete recursively!!
+        if isdirectory(l:dir) | call add(l:failed, l:dir)
+        else | call add(l:deleted, fnamemodify(l:dir, ':t'))
         endif
     endfor
     " return outcome
@@ -394,6 +396,21 @@ function! s:exception_error(exception) abort
     let l:matches = matchlist(a:exception, '^Vim\%((\a\+)\)\=:\(E\d\+\p\+$\)')
     return (!empty(l:matches) && !empty(l:matches[1])) ? l:matches[1]
                 \                                      : a:exception
+endfunction
+
+" s:fp_exists(filepath)    {{{1
+
+""
+" @private
+" Determine whether {filepath} exists.
+"
+" Vim has limitations in checking for the existence of a file. The method
+" employed by this function uses |glob()| and is more robust than using
+" |filereadable()| and |filewritable()|. It can still fail, however, if the
+" file being tested is in a directory for which the user does not have execute
+" permissions.
+function! s:fp_exists(fp)
+    return !empty(glob(a:fp))
 endfunction
 
 " s:filename(key, val)    {{{1
@@ -587,10 +604,8 @@ function! s:report_clean(deleted, failed) abort
         echomsg 'Deleted ' . join(a:deleted, ', ')
     endif
     if !empty(a:failed)
-        call dn#util#error('Errors occurred trying to delete:')
-        for l:path in a:failed
-            call dn#util#error('- ' . l:path)
-        endfor
+        echomsg 'Errors occurred trying to delete:'
+        for l:path in a:failed | echomsg '- ' . l:path | endfor
     endif
 endfunction
 
@@ -743,6 +758,7 @@ endfunction
 " @default arg={'confirm': false, 'insert': false, 'pause_end': false, 'say_none': false}
 "
 " @throws ArgCount if wrong number of arguments
+" @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
 " @throws NoFile if specified buffer has no associated file
@@ -803,6 +819,7 @@ endfunction
 " @default arg={'bufnr': 0, 'confirm': false, 'insert': false, 'pause_end': false, 'say_none': false}
 "
 " @throws ArgCount if wrong number of arguments
+" @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
 " @throws NoFile if specified buffer has no associated file

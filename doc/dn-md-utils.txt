@@ -195,6 +195,7 @@ dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
   'say_none': false} if omitted.
 
   Throws ERROR(ArgCount) if wrong number of arguments
+  Throws ERROR(DelFail) if fail to delete output files/directories
   Throws ERROR(InvalidKey) if Dict contains an invalid key
   Throws ERROR(NoBuffer) if no buffer has specified buffer number
   Throws ERROR(NoFile) if specified buffer has no associated file
@@ -232,6 +233,7 @@ dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
   'say_none': false} if omitted.
 
   Throws ERROR(ArgCount) if wrong number of arguments
+  Throws ERROR(DelFail) if fail to delete output files/directories
   Throws ERROR(InvalidKey) if Dict contains an invalid key
   Throws ERROR(NoBuffer) if no buffer has specified buffer number
   Throws ERROR(NoFile) if specified buffer has no associated file
