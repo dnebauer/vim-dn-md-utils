@@ -1,6 +1,7 @@
 " Control statements    {{{1
 set encoding=utf-8
 scriptencoding utf-8
+
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
 if exists('s:loaded') | finish | endif
 let s:loaded = 1

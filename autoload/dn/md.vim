@@ -3,6 +3,9 @@
 " Maintainer: David Nebauer
 " License: CC0
 
+set encoding=utf-8
+scriptencoding utf-8
+
 " Documentation {{{1
 
 ""
