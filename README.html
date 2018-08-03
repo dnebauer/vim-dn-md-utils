@@ -1,0 +1,34 @@
+<h1 id="vim-dn-markdown">vim-dn-markdown</h1>
+<p>An auxiliary filetype plugin for the markdown language.</p>
+<p>Previously the plugin author used a personal plugin to provide markdown- related functionality. That plugin was retired when the plugin author switched to the <code>vim-pandoc</code> plugin and <a href="https://github.com/msprev/panzer">panzer framework</a> for markdown support. This plugin is intended to address any gaps in markdown support provided by those tools.</p>
+<h2 id="dependencies">Dependencies</h2>
+<p>Pandoc is used to generate output. It is not provided by this ftplugin. This ftplugin depends on the <code>vim-pandoc</code> plugin and assumes <a href="https://github.com/msprev/panzer">panzer</a> is installed and configured.</p>
+<p>This plugin is designed for use with pandoc version 2.0. At the time of writing this is the development branch of pandoc, while the production version is 1.19. As the change in major version number suggests, the interfaces of these two versions of pandoc are incompatible. Hence, this plugin will not work with the current production version of pandoc. There are two known incompatibilities between these versions that affect this plugin:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Version 1.9</th>
+<th style="text-align: left;">Version 2.0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">smart</td>
+<td style="text-align: left;"><code>--smart</code> (option)</td>
+<td style="text-align: left;"><code>--from=markdown+smart</code> (extension)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">latex engine</td>
+<td style="text-align: left;"><code>--latex-engine</code></td>
+<td style="text-align: left;"><code>--pdf-engine</code></td>
+</tr>
+</tbody>
+</table>
+<p>This plugin also depends on the <a href="https://github.com/dnebauer/vim-dn-utils">vim-dn-utils</a> plugin.</p>
+<h2 id="features">Features</h2>
+<p>A default <a href="https://github.com/msprev/panzer">panzer</a>- and pandoc-compatible yaml-style metadata block can be added to a markdown file. An existing pandoc-compatible metadata block can be processed to be <a href="https://github.com/msprev/panzer">panzer</a>-compatible as well.</p>
+<p>A helper function, mapping and command are provided to assist with adding figures. They assume the images are defined using reference links with optional attributes, and that all reference links are added to the end of the document prefixed with three spaces.</p>
+<p>This plugin does not assist with generation of output, but does provide a mapping, command and function for deleting output files and temporary output directories. Read the help file carefully before using this feature as it is potentially unsafe. By default, when buffers are deleted or vim exits, the user has an opportunity to delete output files/directories. This feature can be disabled.</p>
+<h2 id="license">License</h2>
+<p>This plugin is distributed under the GNU GPL version 3.</p>
