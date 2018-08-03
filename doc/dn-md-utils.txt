@@ -181,22 +181,18 @@ dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
     * whether, if output artefacts are detected, to ask user for confirmation
       before anything is deleted
 
-  key "say_none" (bool)
-    * whether to display a message if no output artefacts are detected
+  key "insert" (bool)
+    * whether or not the function was entered from insert mode
 
   key "pause_end" (bool)
     * whether to pause after action taken; will not pause if no actions taken
       and no feedback provided
 
-  key "insert" (bool)
-    * whether or not the function was entered from insert mode
+  key "say_none" (bool)
+    * whether to display a message if no output artefacts are detected
 
-  key "pause_exit" (bool)
-    * whether to pause after all actions before exiting vim; will not pause if
-      no actions taken and no feedback provided
-
-  [arg] is {'confirm': false, 'say_none': false, 'pause_end': false, 'insert':
-  false, 'pause_exit': false} if omitted.
+  [arg] is {'confirm': false, 'insert': false, 'pause_end': false,
+  'say_none': false} if omitted.
 
   Throws ERROR(ArgCount) if wrong number of arguments
   Throws ERROR(InvalidKey) if Dict contains an invalid key
@@ -222,22 +218,18 @@ dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
     * whether, if output artefacts are detected, to ask user for confirmation
       before anything is deleted
 
-  key "say_none" (bool)
-    * whether to display a message if no output artefacts are detected
+  key "insert" (bool)
+    * whether or not the function was entered from insert mode
 
   key "pause_end" (bool)
     * whether to pause after action taken; will not pause if no actions taken
       and no feedback provided
 
-  key "insert" (bool)
-    * whether or not the function was entered from insert mode
+  key "say_none" (bool)
+    * whether to display a message if no output artefacts are detected
 
-  key "pause_exit" (bool)
-    * whether to pause after all actions before exiting vim; will not pause if
-      no actions taken and no feedback provided
-
-  [arg] is {'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end':
-  false, 'insert': false, 'pause_exit': false} if omitted.
+  [arg] is {'bufnr': 0, 'confirm': false, 'insert': false, 'pause_end': false,
+  'say_none': false} if omitted.
 
   Throws ERROR(ArgCount) if wrong number of arguments
   Throws ERROR(InvalidKey) if Dict contains an invalid key

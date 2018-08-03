@@ -233,14 +233,14 @@ let s:refs = [
 " * whether, if output artefacts are detected, to ask user for confirmation
 "   before anything is deleted
 " 
-" key "say_none" (bool)
-" * whether to display a message if no output artefacts are detected
-" 
 " key "pause_end" (bool)
 " * whether to pause after action taken; will not pause if no actions taken
 "   and no feedback provided
 "
-" @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false}
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
+" 
+" @default arg={'bufnr': 0, 'confirm': false, 'pause_end': false, 'say_none': false}
 "
 " @throws InvalidKey if Dict arg contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
@@ -294,7 +294,7 @@ endfunction
 "
 " Default {arg} = {   'bufnr': 0,          'confirm': v:false,
 "                  'say_none': v:false,  'pause_end': v:false,
-"                    'insert': v:false, 'pause_exit': v:false}
+"                    'insert': v:false}
 "
 " @throws InvalidKey if Dict contains an invalid key
 " @throws NonBoolVal if non-boolean value assigned to boolean key
@@ -305,12 +305,11 @@ function! s:complete_arg(arg)
         throw 'NonDictArg expected dict arg, got ' . s:variable_type(a:arg)
     endif
     " set boolean keys    {{{2
-    let l:boolean_keys = ['confirm', 'say_none',  'pause_end',
-                \         'insert',  'pause_exit']
+    let l:boolean_keys = ['confirm', 'insert', 'pause_end', 'say_none']
     " start return Dict arg with default values    {{{2
-    let l:arg = {    'bufnr': 0,          'confirm': v:false,
-                \ 'say_none': v:false,  'pause_end': v:false,
-                \   'insert': v:false, 'pause_exit': v:false }    " }}}2
+    let l:arg = {    'bufnr': 0,         'confirm': v:false,
+                \   'insert': v:false, 'pause_end': v:false,
+                \ 'say_none': v:false}    " }}}2
     " replace return Dict values with provided values if valid    {{{2
     for l:key in keys(a:arg)
         if     l:key ==# 'bufnr'    " {{{3
@@ -731,21 +730,17 @@ endfunction
 " * whether, if output artefacts are detected, to ask user for confirmation
 "   before anything is deleted
 " 
-" key "say_none" (bool)
-" * whether to display a message if no output artefacts are detected
+" key "insert" (bool)
+" * whether or not the function was entered from insert mode
 " 
 " key "pause_end" (bool)
 " * whether to pause after action taken; will not pause if no actions taken
 "   and no feedback provided
+"
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
 " 
-" key "insert" (bool)
-" * whether or not the function was entered from insert mode
-"
-" key "pause_exit" (bool)
-" * whether to pause after all actions before exiting vim; will not pause if
-"   no actions taken and no feedback provided
-"
-" @default arg={'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+" @default arg={'confirm': false, 'insert': false, 'pause_end': false, 'say_none': false}
 "
 " @throws ArgCount if wrong number of arguments
 " @throws InvalidKey if Dict contains an invalid key
@@ -763,20 +758,15 @@ function! dn#md#cleanAllBuffers(...) abort
         " process params
         if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
         let l:arg = s:complete_arg(a:0 ? a:1 : {})
-        let l:action_taken = v:false
         " cycle through buffers, acting only on those with markdown files
         for l:bufnr in range(1, bufnr('$'))
             if !bufexists(l:bufnr) | continue | endif
             if empty(bufname(l:bufnr)) | continue | endif
-            if !s:md_filetype(getbufvar(l:bufnr, '&filetype'))
-                continue
-            endif
+            let l:filetype = getbufvar(l:bufnr, '&filetype')
+            if !s:md_filetype(l:filetype) | continue | endif
             let l:arg.bufnr = l:bufnr
-            if s:clean_output(l:arg) | let l:action_taken = v:true | endif
+            call s:clean_output(l:arg)
         endfor
-        " pause at end if pause_exit requested
-        " - since assume this function called only on vim exit
-        if l:action_taken && l:arg.pause_exit | call s:prompt() | endif
     catch
         call dn#util#error(s:exception_error(v:exception))
         call s:prompt()
@@ -806,21 +796,17 @@ endfunction
 " * whether, if output artefacts are detected, to ask user for confirmation
 "   before anything is deleted
 " 
-" key "say_none" (bool)
-" * whether to display a message if no output artefacts are detected
-" 
+" key "insert" (bool)
+" * whether or not the function was entered from insert mode
+"
 " key "pause_end" (bool)
 " * whether to pause after action taken; will not pause if no actions taken
 "   and no feedback provided
 " 
-" key "insert" (bool)
-" * whether or not the function was entered from insert mode
-"
-" key "pause_exit" (bool)
-" * whether to pause after all actions before exiting vim; will not pause if
-"   no actions taken and no feedback provided
-"
-" @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
+" 
+" @default arg={'bufnr': 0, 'confirm': false, 'insert': false, 'pause_end': false, 'say_none': false}
 "
 " @throws ArgCount if wrong number of arguments
 " @throws InvalidKey if Dict contains an invalid key
