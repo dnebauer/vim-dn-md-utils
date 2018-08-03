@@ -198,6 +198,16 @@ dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
   [arg] is {'confirm': false, 'say_none': false, 'pause_end': false, 'insert':
   false, 'pause_exit': false} if omitted.
 
+  Throws ERROR(ArgCount) if wrong number of arguments
+  Throws ERROR(InvalidKey) if Dict contains an invalid key
+  Throws ERROR(NoBuffer) if no buffer has specified buffer number
+  Throws ERROR(NoFile) if specified buffer has no associated file
+  Throws ERROR(NonBoolVal) if non-boolean value assigned to boolean key
+  Throws ERROR(NonDictArg) if expected Dict arg and got non-Dict
+  Throws ERROR(NonMDBuffer) if specified buffer does not have a markdown
+  filetype
+  Throws ERROR(WrongBufNrType) if buffer number value is not a number
+
 dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
   Deletes common output artefacts: output files with extensions "htm", "html",
   "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
@@ -229,6 +239,16 @@ dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
   [arg] is {'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end':
   false, 'insert': false, 'pause_exit': false} if omitted.
 
+  Throws ERROR(ArgCount) if wrong number of arguments
+  Throws ERROR(InvalidKey) if Dict contains an invalid key
+  Throws ERROR(NoBuffer) if no buffer has specified buffer number
+  Throws ERROR(NoFile) if specified buffer has no associated file
+  Throws ERROR(NonBoolVal) if non-boolean value assigned to boolean key
+  Throws ERROR(NonDictArg) if expected Dict arg and got non-Dict
+  Throws ERROR(NonMDBuffer) if specified buffer does not have a markdown
+  filetype
+  Throws ERROR(WrongBufNrType) if buffer number value is not a number
+
 dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   Inserts a figure on a new line.
 
@@ -243,6 +263,8 @@ dn#md#panzerifyMetadata([insert])                  *dn#md#panzerifyMetadata()*
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
+  Throws ERROR(NoBlockEnd) if can't find end of initial metadata block
+  Throws ERROR(NoMetadata) if no initial metadata block
 
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*

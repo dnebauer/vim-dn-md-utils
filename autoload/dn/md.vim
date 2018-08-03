@@ -241,10 +241,21 @@ let s:refs = [
 "   and no feedback provided
 "
 " @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false}
+"
+" @throws InvalidKey if Dict arg contains an invalid key
+" @throws NoBuffer if no buffer has specified buffer number
+" @throws NoFile if specified buffer has no associated file
+" @throws NonBoolVal if non-boolean value assigned to boolean key
+" @throws NonDictArg if expected Dict arg and got non-Dict
+" @throws NonMDBuffer if specified buffer does not have a markdown filetype
+" @throws WrongBufNrType if buffer number value is not a number
 function! s:clean_output(...) abort
     " check params
-    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
     try    | let l:arg = s:complete_arg(a:0 ? a:1 : {})
+    catch  | throw s:exception_error(v:exception)
+    endtry
+    try    | call s:valid_bufnr(l:arg.bufnr)
     catch  | throw s:exception_error(v:exception)
     endtry
     " identify deletion candidates
@@ -285,12 +296,13 @@ endfunction
 "                  'say_none': v:false,  'pause_end': v:false,
 "                    'insert': v:false, 'pause_exit': v:false}
 "
-" @throws InvalidArg if not a Dict, if contains an invalid key, or contains an
-" invalid "bufnr" as determined by @function(s:valid_bufnr)
+" @throws InvalidKey if Dict contains an invalid key
+" @throws NonBoolVal if non-boolean value assigned to boolean key
+" @throws NonDictArg if expected Dict arg and got non-Dict
 function! s:complete_arg(arg)
     " must be provided with a Dict arg    {{{2
     if type(a:arg) != type({})
-        throw 'Expected dict arg, got ' . s:variable_type(a:arg)
+        throw 'NonDictArg expected dict arg, got ' . s:variable_type(a:arg)
     endif
     " set boolean keys    {{{2
     let l:boolean_keys = ['confirm', 'say_none',  'pause_end',
@@ -302,23 +314,18 @@ function! s:complete_arg(arg)
     " replace return Dict values with provided values if valid    {{{2
     for l:key in keys(a:arg)
         if     l:key ==# 'bufnr'    " {{{3
-            try  " this test re-throws exception, so need to process it first
-                call s:valid_bufnr(a:arg.bufnr)  " throws exception if invalid
-                let l:arg.bufnr = a:arg.bufnr
-            catch
-                throw s:exception_error(v:exception)
-            endtry
+            let l:arg.bufnr = a:arg.bufnr
         " elseif boolean key    {{{3
         elseif count(l:boolean_keys, l:key)
             let l:value = a:arg[l:key]
             if   type(l:value) == type(v:true)
                 let l:arg[l:key] = l:value
             else
-                throw 'Expected bool for "' . l:key . '", got '
+                throw 'NonBoolVal expected bool for "' . l:key . '", got '
                             \ . s:variable_type(l:value)
             endif
         else   " invalid Dict key    {{{3
-            throw 'Invalid Dict key "' . l:key . '"'
+            throw 'InvalidKey "' . l:key . '"'
         endif    " }}}3
     endfor
     " return completed arg Dict    {{{2
@@ -620,27 +627,29 @@ endfunction
 "
 " For the purposes of this plugin a buffer is also invalid if it does not have
 " a markdown filetype.
-"
-" @throws InvalidBufNr
+" @throws NoBuffer if no buffer has specified buffer number
+" @throws NoFile if specified buffer has no associated file
+" @throws NonMDBuffer if specified buffer does not have a markdown filetype
+" @throws WrongBufNrType if buffer number value is not a number
 function! s:valid_bufnr(bufnr) abort
     " check params
     if type(a:bufnr) != type(0)  " check bufnr data type
-        let l:msg = 'Expected buffer number, got '
+        let l:msg = 'WrongBufNrType for buffer number, got '
                     \ . s:variable_type(a:bufnr) . ': ' . a:bufnr
         throw l:msg
     endif
     if !bufexists(a:bufnr)  " check bufnr exists
-        throw 'Buffer ' . a:bufnr . ' does not exist'
+        throw 'NoBuffer buffer ' . a:bufnr . ' does not exist'
     endif
     if empty(bufname(a:bufnr))  " check buffer associated with a file
-        throw 'No file associated with buffer ' . a:bufnr
+        throw 'NoFile buffer ' . a:bufnr . ' has no associated file'
     endif
     let l:ft = getbufvar(a:bufnr, '&filetype')  " check buffer file type
     if !s:md_filetype(l:ft)
-        throw 'Buffer ' . a:bufnr . ' has non-md filetype: ' . l:ft
+        throw 'NonMDBuffer buffer ' . a:bufnr . ' has filetype: ' . l:ft
     endif
     " valid if survived tests
-    return 1
+    return v:true
 endfunction
 
 " s:variable_type(variable)    {{{1
@@ -737,13 +746,22 @@ endfunction
 "   no actions taken and no feedback provided
 "
 " @default arg={'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+"
+" @throws ArgCount if wrong number of arguments
+" @throws InvalidKey if Dict contains an invalid key
+" @throws NoBuffer if no buffer has specified buffer number
+" @throws NoFile if specified buffer has no associated file
+" @throws NonBoolVal if non-boolean value assigned to boolean key
+" @throws NonDictArg if expected Dict arg and got non-Dict
+" @throws NonMDBuffer if specified buffer does not have a markdown filetype
+" @throws WrongBufNrType if buffer number value is not a number
 function! dn#md#cleanAllBuffers(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
     try
         " process params
-        if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+        if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
         let l:arg = s:complete_arg(a:0 ? a:1 : {})
         let l:action_taken = v:false
         " cycle through buffers, acting only on those with markdown files
@@ -800,17 +818,32 @@ endfunction
 "   no actions taken and no feedback provided
 "
 " @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+"
+" @throws ArgCount if wrong number of arguments
+" @throws InvalidKey if Dict contains an invalid key
+" @throws NoBuffer if no buffer has specified buffer number
+" @throws NoFile if specified buffer has no associated file
+" @throws NonBoolVal if non-boolean value assigned to boolean key
+" @throws NonDictArg if expected Dict arg and got non-Dict
+" @throws NonMDBuffer if specified buffer does not have a markdown filetype
+" @throws WrongBufNrType if buffer number value is not a number
 function! dn#md#cleanBuffer(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
-    " params
-    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
-    let l:arg = s:complete_arg(a:0 ? a:1 : {})
-    " clean output files
-    call s:clean_output(l:arg)
-    " return to calling mode
-    if l:arg.insert | call dn#util#insertMode(v:true) | endif
+    try
+        " params
+        if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+        let l:arg = s:complete_arg(a:0 ? a:1 : {})
+        " clean output files
+        call s:clean_output(l:arg)
+    catch
+        call dn#util#error(s:exception_error(v:exception))
+        call s:prompt()
+    finally
+        " return to calling mode
+        if l:arg.insert | call dn#util#insertMode(v:true) | endif
+    endtry
 endfunction
 
 " dn#md#insertFigure([insert])    {{{1
@@ -844,6 +877,8 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
+ "@throws NoBlockEnd if can't find end of initial metadata block
+" @throws NoMetadata if no initial metadata block
 function! dn#md#panzerifyMetadata(...) abort
     " universal tasks
     echo '' |  " clear command line
@@ -855,12 +890,12 @@ function! dn#md#panzerifyMetadata(...) abort
         " must have yaml metadata block at beginning of file
         let l:first_line = getline(1)
         if l:first_line !~# '^---\s*$'
-            throw 'Cannot find yaml metadata block at head of file'
+            throw "NoMetadata can't find initial yaml metadata block"
         endif
         call cursor(1, 1)
         let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
         if !l:end_metadata
-            throw 'Cannot find end of metadata block at head of file'
+            throw "NoBlockEnd can't find end of initial metadata block"
         endif
         let l:file_metadata = getline(2, l:end_metadata - 1)
         " keep initial comments and title, author and date fields
