@@ -741,22 +741,27 @@ function! dn#md#cleanAllBuffers(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
-    " process params
-    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
-    let l:arg = s:complete_arg(a:0 ? a:1 : {})
-    let l:action_taken = v:false
-    " cycle through buffers, acting only on those with markdown files
-    for l:bufnr in range(1, bufnr('$'))
-        if !bufexists(l:bufnr) | continue | endif
-        if empty(bufname(l:bufnr)) | continue | endif
-        if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
-        if s:clean_output(l:arg) | let l:action_taken = v:true | endif
-    endfor
-    " pause at end if pause_exit requested
-    " - since assume this function called only on vim exit
-    if l:action_taken | call s:prompt() | endif
-    " return to calling mode
-    if l:arg.insert | call dn#util#insertMode(v:true) | endif
+    try
+        " process params
+        if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+        let l:arg = s:complete_arg(a:0 ? a:1 : {})
+        let l:action_taken = v:false
+        " cycle through buffers, acting only on those with markdown files
+        for l:bufnr in range(1, bufnr('$'))
+            if !bufexists(l:bufnr) | continue | endif
+            if empty(bufname(l:bufnr)) | continue | endif
+            if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
+            if s:clean_output(l:arg) | let l:action_taken = v:true | endif
+        endfor
+        " pause at end if pause_exit requested
+        " - since assume this function called only on vim exit
+        if l:action_taken | call s:prompt() | endif
+    catch
+        call dn#util#error(s:exception_error(v:exception))
+    finally
+        " return to calling mode
+        if l:arg.insert | call dn#util#insertMode(v:true) | endif
+    endtry
 endfunction
 
 " dn#md#cleanBuffer([arg])    {{{1
