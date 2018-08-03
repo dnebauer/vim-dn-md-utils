@@ -252,7 +252,9 @@ let s:refs = [
 " @throws WrongBufNrType if buffer number value is not a number
 function! s:clean_output(...) abort
     " check params
-    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+    if a:0 > 1
+        throw 'ERROR(ArgCount): Expected 1 arg, got ' . a:0
+    endif
     try    | let l:arg = s:complete_arg(a:0 ? a:1 : {})
     catch  | throw s:exception_error(v:exception)
     endtry
@@ -279,7 +281,7 @@ function! s:clean_output(...) abort
     " report outcome
     call s:report_clean(l:deleted, l:failed)
     if !empty(l:failed)
-        throw 'DelFail failed to delete ' . join(l:failed, ', ')
+        throw 'ERROR(DelFail): Failed to delete ' . join(l:failed, ', ')
     endif
     if l:arg.pause_end | call s:prompt() | endif
     return v:true  " signals action taken
@@ -304,7 +306,8 @@ endfunction
 function! s:complete_arg(arg)
     " must be provided with a Dict arg    {{{2
     if type(a:arg) != type({})
-        throw 'NonDictArg expected dict arg, got ' . s:variable_type(a:arg)
+        throw 'ERROR(NonDictArg): Expected dict arg, got '
+                    \ . s:variable_type(a:arg)
     endif
     " set boolean keys    {{{2
     let l:boolean_keys = ['confirm', 'insert', 'pause_end', 'say_none']
@@ -322,11 +325,11 @@ function! s:complete_arg(arg)
             if   type(l:value) == type(v:true)
                 let l:arg[l:key] = l:value
             else
-                throw 'NonBoolVal expected bool for "' . l:key . '", got '
-                            \ . s:variable_type(l:value)
+                throw 'ERROR(NonBoolVal): Expected bool for "' . l:key
+                            \ . '", got ' . s:variable_type(l:value)
             endif
         else   " invalid Dict key    {{{3
-            throw 'InvalidKey "' . l:key . '"'
+            throw 'ERROR(InvalidKey): "' . l:key . '"'
         endif    " }}}3
     endfor
     " return completed arg Dict    {{{2
@@ -650,19 +653,20 @@ endfunction
 function! s:valid_bufnr(bufnr) abort
     " check params
     if type(a:bufnr) != type(0)  " check bufnr data type
-        let l:msg = 'WrongBufNrType for buffer number, got '
-                    \ . s:variable_type(a:bufnr) . ': ' . a:bufnr
-        throw l:msg
+        throw 'ERROR(WrongBufNrType): For buffer number got a '
+                    \ . s:variable_type(a:bufnr) . ': '
+                    \ . dn#util#stringify(a:bufnr)
     endif
     if !bufexists(a:bufnr)  " check bufnr exists
-        throw 'NoBuffer buffer ' . a:bufnr . ' does not exist'
+        throw 'ERROR(NoBuffer): Buffer ' . a:bufnr . ' does not exist'
     endif
     if empty(bufname(a:bufnr))  " check buffer associated with a file
-        throw 'NoFile buffer ' . a:bufnr . ' has no associated file'
+        throw 'ERROR(NoFile): Buffer ' . a:bufnr . ' has no associated file'
     endif
     let l:ft = getbufvar(a:bufnr, '&filetype')  " check buffer file type
     if !s:md_filetype(l:ft)
-        throw 'NonMDBuffer buffer ' . a:bufnr . ' has filetype: ' . l:ft
+        throw 'ERROR(NonMDBuffer): Buffer ' . a:bufnr
+                    \ . ' has filetype: ' . l:ft
     endif
     " valid if survived tests
     return v:true
@@ -773,7 +777,7 @@ function! dn#md#cleanAllBuffers(...) abort
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
     " process params
-    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+    if a:0 > 1 | throw 'ERROR(ArgCount): Expected 1 arg, got ' . a:0 | endif
     let l:arg = s:complete_arg(a:0 ? a:1 : {})
     " cycle through buffers, acting only on those with markdown files
     for l:bufnr in range(1, bufnr('$'))
@@ -836,7 +840,7 @@ function! dn#md#cleanBuffer(...) abort
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
     " params
-    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+    if a:0 > 1 | throw 'ERROR(ArgCount): Expected 1 arg, got ' . a:0 | endif
     let l:arg = s:complete_arg(a:0 ? a:1 : {})
     " clean output files
     call s:clean_output(l:arg)
@@ -888,12 +892,12 @@ function! dn#md#panzerifyMetadata(...) abort
         " must have yaml metadata block at beginning of file
         let l:first_line = getline(1)
         if l:first_line !~# '^---\s*$'
-            throw "NoMetadata can't find initial yaml metadata block"
+            throw "ERROR(NoMetadata): Can't find initial yaml metadata block"
         endif
         call cursor(1, 1)
         let l:end_metadata = search('^\(---\|\.\.\.\)\s*$', 'W')
         if !l:end_metadata
-            throw "NoBlockEnd can't find end of initial metadata block"
+            throw "ERROR(NoBlockEnd): Can't find end of top metadata block"
         endif
         let l:file_metadata = getline(2, l:end_metadata - 1)
         " keep initial comments and title, author and date fields
