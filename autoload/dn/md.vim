@@ -260,10 +260,9 @@ function! s:clean_output(...) abort
     catch  | throw s:exception_error(v:exception)
     endtry
     " identify deletion candidates
-    let l:filepath = simplify(resolve(fnamemodify(bufname(l:arg.bufnr),
-                \                                 ':p')))
-    let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
-    call s:log([fnamemodify(l:filepath, ':t')] + l:fps + l:dirs) " DELETE LINE!
+    let l:md_fp = simplify(resolve(fnamemodify(bufname(l:arg.bufnr), ':p')))
+    let [l:fps, l:dirs] = s:output_artefacts(l:md_fp)
+    call s:log([fnamemodify(l:md_fp, ':t')] + l:fps + l:dirs) " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
         if l:arg.say_none | echomsg 'No output to clean up' | endif
         return
@@ -272,7 +271,7 @@ function! s:clean_output(...) abort
     if l:arg.confirm
         let l:output = join(map(l:fps, function('s:filename'))
                     \       + map(l:dirs, function('s:filename')), ', ')
-        let l:fname = fnamemodify(l:filepath, ':t')
+        let l:fname = fnamemodify(l:md_fp, ':t')
         let l:msg = 'Delete ' . l:fname . ' output (' . l:output . ') [y/N] '
         if !s:confirm(l:msg) | return | endif
     endif
@@ -780,7 +779,9 @@ function! dn#md#cleanAllBuffers(...) abort
         let l:filetype = getbufvar(l:bufnr, '&filetype')
         if !s:md_filetype(l:filetype) | continue | endif
         let l:arg.bufnr = l:bufnr
-        call s:clean_output(l:arg)
+        try   | call s:clean_output(l:arg)
+        catch | throw s:exception_error(v:exception)
+        endtry
     endfor
     " return to calling mode
     if l:arg.insert | call dn#util#insertMode(v:true) | endif
