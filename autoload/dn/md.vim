@@ -7,7 +7,7 @@
 
 ""
 " @section Introduction, intro
-" @order intro features settings commands mappings vars autocmds
+" @order features mappings vars autocmds
 " An auxiliary filetype plugin for the markdown language.
 "
 " Previously the plugin author used a personal plugin to provide markdown-
@@ -56,7 +56,8 @@
 "     title:  "[][source]"
 "     author: "[][author]"
 "     date:   ""
-"     style:  [Standard, Latex12pt]  # panzer: 8-12,14,17,20pt; PaginateSections
+"     style:  [Standard, Latex14pt]
+"             # Latex8-12|14|17|20pt; PaginateSections; IncludeFiles
 "     ---
 " <
 " The reference-style links are defined at the end of the document. The

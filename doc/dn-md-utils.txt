@@ -5,12 +5,12 @@ David Nebauer                                                    *dn-md-utils*
 CONTENTS                                                *dn-md-utils-contents*
   1. Introduction..........................................|dn-md-utils-intro|
   2. Configuration........................................|dn-md-utils-config|
-  3. Features...........................................|dn-md-utils-features|
-  4. Functions.........................................|dn-md-utils-functions|
-  5. Commands...........................................|dn-md-utils-commands|
-  6. Mappings...........................................|dn-md-utils-mappings|
-  7. Variables..............................................|dn-md-utils-vars|
-  8. Autocommands.......................................|dn-md-utils-autocmds|
+  3. Commands...........................................|dn-md-utils-commands|
+  4. Features...........................................|dn-md-utils-features|
+  5. Mappings...........................................|dn-md-utils-mappings|
+  6. Variables..............................................|dn-md-utils-vars|
+  7. Autocommands.......................................|dn-md-utils-autocmds|
+  8. Functions.........................................|dn-md-utils-functions|
 
 ==============================================================================
 INTRODUCTION                                               *dn-md-utils-intro*
@@ -53,6 +53,25 @@ normally load.
 Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
 deleted or vim exits. For more information see |dn#md#cleanBuffer()|,
 |dn#md#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
+
+==============================================================================
+COMMANDS                                                *dn-md-utils-commands*
+
+:[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
+  Calls |dn#md#addBoilerplate()| to add a metadata header template, including
+  title, author, date, and (panzer) styles, and a footer template for url
+  reference links.
+
+:[N]MUCleanOutput                                             *:MUCleanOutput*
+  Calls |dn#md#cleanBuffer()| to delete output files and temporary output
+  directories. The user is not asked for confirmation before deletion.
+
+:[N]MUInsertFigure                                           *:MUInsertFigure*
+  Calls |dn#md#insertFigure()| to insert a figure on the following line.
+
+:[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
+  Calls |dn#md#panzerifyMetadata()| to add a line to the document's metadata
+  block for panzer styles.
 
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
@@ -154,6 +173,51 @@ Output files and directories associated with the current buffer can be deleted
 at any time by using the |dn#md#cleanBuffer()| function, which can be called
 using the command |:MUCleanOutput| and mapping "<Leader>co" (see
 |dn-md-utils-mappings|).
+
+==============================================================================
+MAPPINGS                                                *dn-md-utils-mappings*
+
+The following mappings are provided for both |Insert-mode| and |Normal-mode|:
+
+<Leader>ab
+  * add markdown boilerplate
+  * calls |dn#md#addBoilerplate()|
+
+<Leader>pm
+  * convert yaml metadata block to use panzer
+  * calls |dn#md#panzerifyMetadata()|
+
+<Leader>fig
+  * insert figure on the following line
+  * calls |dn#md#insertFigure()|
+
+<Leader>co
+  * clean output files and temporary directories
+  * calls |dn#md#cleanBuffer()|
+
+==============================================================================
+VARIABLES                                                   *dn-md-utils-vars*
+
+This ftplugin contributes to the |dn-utils| plugin's help system (see
+|dn#util#help()| for details). In the help system navigate to: vim -> markdown
+ftplugin.
+
+==============================================================================
+AUTOCOMMANDS                                            *dn-md-utils-autocmds*
+
+This plugin is configured to automatically clean output files and directories
+associated with the current buffer when it is deleted (provided it is of
+markdown file type), and to automatically clean output files and directories
+associated with all markdown file buffers when vim exits. In all case the user
+is asked for confirmation before any files or directories are deleted.
+
+For more information on automatic cleaning see |dn#util#cleanBuffer()|.
+
+The autocmds responsible for this behaviour can be found in the "dn_markdown"
+autocmd group (see |autocmd-groups|) and can be viewed (see |autocmd-list|).
+
+Automatic cleaning on buffer and vim exit can be configured with
+|b:dn_md_no_autoclean|.
 
 ==============================================================================
 FUNCTIONS                                              *dn-md-utils-functions*
@@ -259,70 +323,6 @@ dn#md#panzerifyMetadata([insert])                  *dn#md#panzerifyMetadata()*
   [insert] is false if omitted.
   Throws ERROR(NoBlockEnd) if can't find end of initial metadata block
   Throws ERROR(NoMetadata) if no initial metadata block
-
-==============================================================================
-COMMANDS                                                *dn-md-utils-commands*
-
-:[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
-  Calls |dn#md#addBoilerplate()| to add a metadata header template, including
-  title, author, date, and (panzer) styles, and a footer template for url
-  reference links.
-
-:[N]MUCleanOutput                                             *:MUCleanOutput*
-  Calls |dn#md#cleanBuffer()| to delete output files and temporary output
-  directories. The user is not asked for confirmation before deletion.
-
-:[N]MUInsertFigure                                           *:MUInsertFigure*
-  Calls |dn#md#insertFigure()| to insert a figure on the following line.
-
-:[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
-  Calls |dn#md#panzerifyMetadata()| to add a line to the document's metadata
-  block for panzer styles.
-
-==============================================================================
-MAPPINGS                                                *dn-md-utils-mappings*
-
-The following mappings are provided for both |Insert-mode| and |Normal-mode|:
-
-<Leader>ab
-  * add markdown boilerplate
-  * calls |dn#md#addBoilerplate()|
-
-<Leader>pm
-  * convert yaml metadata block to use panzer
-  * calls |dn#md#panzerifyMetadata()|
-
-<Leader>fig
-  * insert figure on the following line
-  * calls |dn#md#insertFigure()|
-
-<Leader>co
-  * clean output files and temporary directories
-  * calls |dn#md#cleanBuffer()|
-
-==============================================================================
-VARIABLES                                                   *dn-md-utils-vars*
-
-This ftplugin contributes to the |dn-utils| plugin's help system (see
-|dn#util#help()| for details). In the help system navigate to: vim -> markdown
-ftplugin.
-
-==============================================================================
-AUTOCOMMANDS                                            *dn-md-utils-autocmds*
-
-This plugin is configured to automatically clean output files and directories
-associated with the current buffer when it is deleted (provided it is of
-markdown file type), and to automatically clean output files and directories
-associated with all markdown file buffers when vim exits. In all case the user
-is asked for confirmation before any files or directories are deleted.
-
-For more information on automatic cleaning see |dn#util#cleanBuffer()|.
-
-The autocmds responsible for this behaviour can be found in the "dn_markdown"
-autocmd group (see |autocmd-groups|) and can be viewed (see |autocmd-list|).
-
-Automatic cleaning on buffer and vim exit can be configured with
-|b:dn_md_no_autoclean|.
 
 
 vim:tw=78:ts=8:ft=help:norl:
