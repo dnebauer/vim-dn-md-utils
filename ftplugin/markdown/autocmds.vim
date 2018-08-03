@@ -47,8 +47,7 @@ if !(exists('b:dn_md_no_autoclean') && b:dn_md_no_autoclean)
         autocmd BufDelete <buffer>
                     \ call dn#md#cleanBuffer({
                     \      'bufnr' : str2nr(expand('<abuf>')),
-                    \     'confirm': v:true,
-                    \   'pause_end': v:true})
+                    \     'confirm': v:true})
         autocmd VimLeavePre *
                     \ call dn#md#cleanAllBuffers({  'confirm': v:true,
                     \                             'pause_end': v:true})
