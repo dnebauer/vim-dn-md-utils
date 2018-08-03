@@ -940,5 +940,6 @@ function! dn#md#panzerifyMetadata(...) abort
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
+" }}}1
 
 " vim: set foldmethod=marker :
