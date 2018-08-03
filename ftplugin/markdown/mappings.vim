@@ -60,13 +60,15 @@ if !hasmapto('<Plug>DnCOI')
     imap <buffer> <unique> <LocalLeader>co <Plug>DnCOI
 endif
 imap <buffer> <unique> <Plug>DnCOI
-            \ <Esc>:call dn#md#cleanBuffer({ 'bufnr': bufnr('%'),
-            \                               'insert': v:true})<CR>
+            \ <Esc>:call dn#md#cleanBuffer({   'bufnr': bufnr('%'),
+            \                               'say_none': v:true,
+            \                                 'insert': v:true})<CR>
 if !hasmapto('<Plug>DnCON')
     nmap <buffer> <unique> <LocalLeader>co <Plug>DnCON
 endif
 nmap <buffer> <unique> <Plug>DnCON
-            \ :call dn#md#cleanBuffer({'bufnr': bufnr('%')})<CR>
+            \ :call dn#md#cleanBuffer({   'bufnr': bufnr('%'),
+            \                          'say_none': v:true})<CR>
 
 " \fig - insert figure    {{{1
 
