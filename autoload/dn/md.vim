@@ -758,6 +758,7 @@ function! dn#md#cleanAllBuffers(...) abort
         if l:action_taken | call s:prompt() | endif
     catch
         call dn#util#error(s:exception_error(v:exception))
+        call s:prompt()
     finally
         " return to calling mode
         if l:arg.insert | call dn#util#insertMode(v:true) | endif
