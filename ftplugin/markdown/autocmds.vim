@@ -50,7 +50,7 @@ if !(exists('b:dn_md_no_autoclean') && b:dn_md_no_autoclean)
                     \     'confirm': v:true,
                     \   'pause_end': v:true})
         autocmd VimLeavePre *
-                    \ call dn#md#cleanAllBuffers({  'confirm': v:true,
+                    \ debug call dn#md#cleanAllBuffers({  'confirm': v:true,
                     \                             'pause_end': v:true})
     augroup END
 endif
