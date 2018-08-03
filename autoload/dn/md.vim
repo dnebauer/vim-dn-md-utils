@@ -754,26 +754,20 @@ function! dn#md#cleanAllBuffers(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
-    try
-        " process params
-        if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
-        let l:arg = s:complete_arg(a:0 ? a:1 : {})
-        " cycle through buffers, acting only on those with markdown files
-        for l:bufnr in range(1, bufnr('$'))
-            if !bufexists(l:bufnr) | continue | endif
-            if empty(bufname(l:bufnr)) | continue | endif
-            let l:filetype = getbufvar(l:bufnr, '&filetype')
-            if !s:md_filetype(l:filetype) | continue | endif
-            let l:arg.bufnr = l:bufnr
-            call s:clean_output(l:arg)
-        endfor
-    catch
-        call dn#util#error(s:exception_error(v:exception))
-        call s:prompt()
-    finally
-        " return to calling mode
-        if l:arg.insert | call dn#util#insertMode(v:true) | endif
-    endtry
+    " process params
+    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+    let l:arg = s:complete_arg(a:0 ? a:1 : {})
+    " cycle through buffers, acting only on those with markdown files
+    for l:bufnr in range(1, bufnr('$'))
+        if !bufexists(l:bufnr) | continue | endif
+        if empty(bufname(l:bufnr)) | continue | endif
+        let l:filetype = getbufvar(l:bufnr, '&filetype')
+        if !s:md_filetype(l:filetype) | continue | endif
+        let l:arg.bufnr = l:bufnr
+        call s:clean_output(l:arg)
+    endfor
+    " return to calling mode
+    if l:arg.insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
 " dn#md#cleanBuffer([arg])    {{{1
@@ -820,19 +814,13 @@ function! dn#md#cleanBuffer(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
-    try
-        " params
-        if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
-        let l:arg = s:complete_arg(a:0 ? a:1 : {})
-        " clean output files
-        call s:clean_output(l:arg)
-    catch
-        call dn#util#error(s:exception_error(v:exception))
-        call s:prompt()
-    finally
-        " return to calling mode
-        if l:arg.insert | call dn#util#insertMode(v:true) | endif
-    endtry
+    " params
+    if a:0 > 1 | throw 'ArgCount expected 1 arg, got ' . a:0 | endif
+    let l:arg = s:complete_arg(a:0 ? a:1 : {})
+    " clean output files
+    call s:clean_output(l:arg)
+    " return to calling mode
+    if l:arg.insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
 " dn#md#insertFigure([insert])    {{{1
