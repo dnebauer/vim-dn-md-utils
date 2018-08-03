@@ -776,7 +776,7 @@ function! dn#md#cleanAllBuffers(...) abort
         endfor
         " pause at end if pause_exit requested
         " - since assume this function called only on vim exit
-        if l:action_taken | call s:prompt() | endif
+        if l:action_taken && l:arg.pause_exit | call s:prompt() | endif
     catch
         call dn#util#error(s:exception_error(v:exception))
         call s:prompt()
