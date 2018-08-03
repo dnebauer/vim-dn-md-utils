@@ -269,8 +269,8 @@ function! s:clean_output(...) abort
     endif
     " confirm deletion if necessary
     if l:arg.confirm
-        let l:output = join(map(l:fps, function('s:filename'))
-                    \       + map(l:dirs, function('s:filename')), ', ')
+        let l:output = join(map(copy(l:fps), function('s:filename'))
+                    \       + map(copy(l:dirs), function('s:filename')), ', ')
         let l:fname = fnamemodify(l:md_fp, ':t')
         let l:msg = 'Delete ' . l:fname . ' output (' . l:output . ') [y/N] '
         if !s:confirm(l:msg) | return | endif
@@ -560,6 +560,9 @@ endfunction
 " "html" and "pdf", and temporary directories like ".tmp". (See
 " @function(dn#util#cleanBuffer) for a complete list.) Uses directory and base
 " name from {filepath}.
+"
+" Returns a two item list with the first item being a list of located output
+" files and the second item being a list of located output directories.
 function! s:output_artefacts(filepath) abort
     let l:filepath = simplify(fnamemodify(a:filepath, ':p'))
     let l:dir = fnamemodify(l:filepath, ':h')
@@ -569,7 +572,7 @@ function! s:output_artefacts(filepath) abort
     let l:fps = [] | let l:dirs = []
     for l:suffix in s:clean_suffixes
         let l:candidate = l:dir . '/' . l:base . '.' . l:suffix
-        if filereadable(l:candidate) | call add(l:fps, l:candidate) | endif
+        if s:fp_exists(l:candidate) | call add(l:fps, l:candidate) | endif
     endfor
     for l:subdir in s:clean_dirs
         let l:candidate = l:dir . '/' . l:subdir
