@@ -16,19 +16,19 @@ set cpoptions&vim
 "
 " <Leader>ab
 "   * add markdown boilerplate
-"   * calls @function(dn#md_util#addBoilerplate)
+"   * calls @function(dn#md#addBoilerplate)
 "
 " <Leader>pm
 "   * convert yaml metadata block to use panzer
-"   * calls @function(dn#md_util#panzerifyMetadata)
+"   * calls @function(dn#md#panzerifyMetadata)
 "
 " <Leader>fig
 "   * insert figure on the following line
-"   * calls @function(dn#md_util#insertFigure)
+"   * calls @function(dn#md#insertFigure)
 "
 " <Leader>co
 "   * clean output files and temporary directories
-"   * calls @function(dn#md_util#cleanBuffer)
+"   * calls @function(dn#md#cleanBuffer)
 
 " }}}1
 
@@ -37,68 +37,69 @@ set cpoptions&vim
 " \ab  - add markdown boilerplate    {{{1
 
 ""
-" Calls @function(dn#md_util#addBoilerplate) from |Insert-mode| and
-" |Normal-mode| to add a metadata header template, including title, author,
-" date, and (panzer) styles, and a footer template for url reference links.
+" Calls @function(dn#md#addBoilerplate) from |Insert-mode| and |Normal-mode|
+" to add a metadata header template, including title, author, date, and
+" (panzer) styles, and a footer template for url reference links.
 if !hasmapto('<Plug>DnABI')
     imap <buffer> <unique> <LocalLeader>ab <Plug>DnABI
 endif
 imap <buffer> <unique> <Plug>DnABI
-            \ <Esc>:call dn#md_util#addBoilerplate(g:dn_true)<CR>
+            \ <Esc>:call dn#md#addBoilerplate(v:true)<CR>
 if !hasmapto('<Plug>DnABN')
     nmap <buffer> <unique> <LocalLeader>ab <Plug>DnABN
 endif
 nmap <buffer> <unique> <Plug>DnABN
-            \ :call dn#md_util#addBoilerplate()<CR>
+            \ :call dn#md#addBoilerplate()<CR>
 
 " \co  - clean output    {{{1
 
 ""
-" Calls @function(dn#md_util#cleanBuffer) from |Insert-mode| and
-" |Normal-mode| to delete output files and temporary output directories.
+" Calls @function(dn#md#cleanBuffer) from |Insert-mode| and |Normal-mode| to
+" delete output files and temporary output directories.
 if !hasmapto('<Plug>DnCOI')
     imap <buffer> <unique> <LocalLeader>co <Plug>DnCOI
 endif
 imap <buffer> <unique> <Plug>DnCOI
-            \ <Esc>:call dn#md_util#cleanBuffer(bufnr('%'), 0, 1)<CR>
+            \ <Esc>:call dn#md#cleanBuffer({ 'bufnr': bufnr('%'),
+            \                               'insert': v:true})<CR>
 if !hasmapto('<Plug>DnCON')
     nmap <buffer> <unique> <LocalLeader>co <Plug>DnCON
 endif
 nmap <buffer> <unique> <Plug>DnCON
-            \ :call dn#md_util#cleanBuffer(bufnr('%'), 0, 0)<CR>
+            \ :call dn#md#cleanBuffer({'bufnr': bufnr('%')})<CR>
 
 " \fig - insert figure    {{{1
 
 ""
-" Calls @function(dn#md_util#insertFigure) from |Insert-mode| and
-" |Normal-mode| to insert a figure on the following line.
+" Calls @function(dn#md#insertFigure) from |Insert-mode| and |Normal-mode| to
+" insert a figure on the following line.
 if !hasmapto('<Plug>DnFIGI')
     imap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGI
 endif
 imap <buffer> <unique> <Plug>DnFIGI
-            \ <Esc>:call dn#md_util#insertFigure(g:dn_true)<CR>
+            \ <Esc>:call dn#md#insertFigure(v:true)<CR>
 if !hasmapto('<Plug>DnFIGN')
     nmap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGN
 endif
 nmap <buffer> <unique> <Plug>DnFIGN
-            \ :call dn#md_util#insertFigure()<CR>
+            \ :call dn#md#insertFigure()<CR>
 
 " \pm  - convert yaml metadata block to use panzer    {{{1
 
 ""
-" Calls @function(dn#md_util#panzerifyMetadata) from |Insert-mode| and
+" Calls @function(dn#md#panzerifyMetadata) from |Insert-mode| and
 " |Normal-mode| to add a line to the document's metadata block for panzer
 " styles.
 if !hasmapto('<Plug>DnPMI')
     imap <buffer> <unique> <LocalLeader>pm <Plug>DnPMI
 endif
 imap <buffer> <unique> <Plug>DnPMI
-            \ <Esc>:call dn#md_util#panzerifyMetadata(g:dn_true)<CR>
+            \ <Esc>:call dn#md#panzerifyMetadata(v:true)<CR>
 if !hasmapto('<Plug>DnPMN')
     nmap <buffer> <unique> <LocalLeader>pm <Plug>DnPMN
 endif
 nmap <buffer> <unique> <Plug>DnPMN
-            \ :call dn#md_util#panzerifyMetadata()<CR>
+            \ :call dn#md#panzerifyMetadata()<CR>
 " }}}1
 
 " Boilerplate    {{{1

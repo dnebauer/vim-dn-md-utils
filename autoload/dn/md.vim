@@ -69,13 +69,13 @@
 "        [source]: 
 " <
 " The default metadata block and reference link definitions are added to a
-" document by the function @function(dn#md_util#addBoilerplate), which can be
+" document by the function @function(dn#md#addBoilerplate), which can be
 " called using the command @command(MUAddBoilerplate) and mapping "<Leader>ab"
 " (see @section(mappings)).
 "
 " Previously created markdown files have yaml metadata blocks that do not use
 " panzer. Those metadata blocks can be "panzerified" using the
-" @function(dn#md_util#panzerifyMetadata) function, which can be called using
+" @function(dn#md#panzerifyMetadata) function, which can be called using
 " the command @command(MUPanzerifyMetadata) and mapping "<Leader>pm" (see
 " @section(mappings)).
 "
@@ -101,7 +101,7 @@
 "        {#fig:packed .class width="50%"} 
 " <
 " A figure is inserted on the following line using the
-" @function(dn#md_util#insertFigure) function, which can be called using the
+" @function(dn#md#insertFigure) function, which can be called using the
 " command @command(MUInsertFigure) and mapping "<Leader>fig" (see
 " @section(mappings)).
 "
@@ -117,7 +117,7 @@
 " the current buffer is located.
 "
 " If the file being edited is FILE.ext, the files that will be deleted have
-" names like "FILE.html" and "FILE.pdf" (see @function(dn#md_util#cleanBuffer)
+" names like "FILE.html" and "FILE.pdf" (see @function(dn#md#cleanBuffer)
 " for a complete list). The temporary output subdirectory ".tmp" will also be
 " recursively force deleted. Warning: This plugin does not check that it is
 " safe to delete files and directories identified for deletion. For example,
@@ -135,7 +135,7 @@
 " details.
 " 
 " Output files and directories associated with the current buffer can be
-" deleted at any time by using the @function(dn#md_util#cleanBuffer) function,
+" deleted at any time by using the @function(dn#md#cleanBuffer) function,
 " which can be called using the command @command(MUCleanOutput) and mapping
 " "<Leader>co" (see @section(mappings)).
 
@@ -203,7 +203,10 @@ let s:refs = [
 
 " Script functions
 
-" s:clean_output(buffer_number, [confirm])    {{{1
+" s:clean_output([arg])    {{{1
+
+" - in block below @default must be a single line to be processed correctly by
+"   vimdoc, so take care when formatting, e.g., with |gq|
 
 ""
 " @private
@@ -211,30 +214,50 @@ let s:refs = [
 " and "pdf", and temporary directories like ".tmp". (See
 " @function(dn#util#cleanOutput) for a complete list.)
 "
-" Obtains file path associated with the buffer identified by {buffer_number}.
-" From this file path obtains the file directory and basename of output files.
-" Function exits if there is no file associated with the buffer (because
+" Returns boolean indicating whether any output was deleted.
+"
+" Obtains file path associated with the provided buffer number. This file path
+" is used to obtain the file directory and basename of output files. The
+" function exits if there is no file associated with the buffer (because
 " pandoc will not create output for it).
 "
-" See @function(a:valid_bufnr) for notes on how buffer number is checked.
+" See @function(a:valid_bufnr) for notes on how the buffer number is checked.
 "
-" If [confirm] is true the user will be asked for confirmation before anything
-" is deleted. (No confirmation is necessary if there is nothing to delete.)
-" @default confirm=0
-function! s:clean_output(bufnr, ...) abort
+" Optional [arg] is a |Dictionary| with a number of valid keys, all of which
+" are themselves optional:
+"
+" key "bufnr" (number)
+" * buffer number to process for output
+"
+" key "confirm" (bool)
+" * whether, if output artefacts are detected, to ask user for confirmation
+"   before anything is deleted
+" 
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
+" 
+" key "pause_end" (bool)
+" * whether to pause after action taken; will not pause if no actions taken
+"   and no feedback provided
+"
+" @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false}
+function! s:clean_output(...) abort
     " check params
-    if !s:valid_bufnr(a:bufnr) | return | endif
-    let l:confirm = (a:0 && a:1)
+    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+    try    | let l:arg = s:complete_arg(a:0 ? a:1 : {})
+    catch  | throw s:exception_error(v:exception)
+    endtry
     " identify deletion candidates
-    let l:filepath = simplify(resolve(fnamemodify(bufname(a:bufnr), ':p')))
+    let l:filepath = simplify(resolve(fnamemodify(bufname(l:arg.bufnr),
+                \                                 ':p')))
     let [l:fps, l:dirs] = s:output_artefacts(l:filepath)
     call s:log([fnamemodify(l:filepath, ':t')] + l:fps + l:dirs) " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
-        echomsg 'No output to clean up'
+        if l:arg.say_none | echomsg 'No output to clean up' | endif
         return
     endif
     " confirm deletion if necessary
-    if l:confirm
+    if l:arg.confirm
         let l:output = join(map(l:fps, function('s:filename'))
                     \       + map(l:dirs, function('s:filename')), ', ')
         let l:fname = fnamemodify(l:filepath, ':t')
@@ -245,6 +268,61 @@ function! s:clean_output(bufnr, ...) abort
     let [l:deleted, l:failed] = s:delete_output(l:fps, l:dirs)
     " report outcome
     call s:report_clean(l:deleted, l:failed)
+    if l:arg.pause_end | call s:prompt() | endif
+    return v:true  " signals action taken
+endfunction
+
+" s:complete_arg(arg)    {{{1
+
+""
+" @private
+" Completes |Dictionary| {arg} provided to @function(s:clean_output),
+" @function(dn#md#cleanBuffer) and @function(dn#md#cleanAllBuffers).
+" That is, any default key not present in the provided Dict {arg} is added to
+" the Dict with the corresponding default value.
+"
+" Default {arg} = {   'bufnr': 0,          'confirm': v:false,
+"                  'say_none': v:false,  'pause_end': v:false,
+"                    'insert': v:false, 'pause_exit': v:false}
+"
+" @throws InvalidArg if not a Dict, if contains an invalid key, or contains an
+" invalid "bufnr" as determined by @function(s:valid_bufnr)
+function! s:complete_arg(arg)
+    " must be provided with a Dict arg    {{{2
+    if type(a:arg) != type({})
+        throw 'Expected dict arg, got ' . s:variable_type(a:arg)
+    endif
+    " set boolean keys    {{{2
+    let l:boolean_keys = ['confirm', 'say_none',  'pause_end',
+                \         'insert',  'pause_exit']
+    " start return Dict arg with default values    {{{2
+    let l:arg = {    'bufnr': 0,          'confirm': v:false,
+                \ 'say_none': v:false,  'pause_end': v:false,
+                \   'insert': v:false, 'pause_exit': v:false }    " }}}2
+    " replace return Dict values with provided values if valid    {{{2
+    for l:key in keys(a:arg)
+        if     l:key ==# 'bufnr'    " {{{3
+            try  " this test re-throws exception, so need to process it first
+                call s:valid_bufnr(a:arg.bufnr)  " throws exception if invalid
+                let l:arg.bufnr = a:arg.bufnr
+            catch
+                throw s:exception_error(v:exception)
+            endtry
+        " elseif boolean key    {{{3
+        elseif count(l:boolean_keys, l:key)
+            let l:value = a:arg[l:key]
+            if   type(l:value) == type(v:true)
+                let l:arg[l:key] = l:value
+            else
+                throw 'Expected bool for "' . l:key . '", got '
+                            \ . s:variable_type(l:value)
+            endif
+        else   " invalid Dict key    {{{3
+            throw 'Invalid Dict key "' . l:key . '"'
+        endif    " }}}3
+    endfor
+    " return completed arg Dict    {{{2
+    return l:arg    " }}}2
 endfunction
 
 " s:confirm(question)    {{{1
@@ -291,6 +369,27 @@ function! s:delete_output(fps, dirs) abort
     return [l:deleted, l:failed]
 endfunction
 
+" s:exception_error(exception)    {{{1
+
+""
+" @private
+" Extracts error message from Vim exceptions. Other exceptions are returned
+" unaltered.
+"
+" This is useful because vim will not allow Vim errors to be re-thrown. If all
+" errors are processed by this function before re-throwing them, there is no
+" chance of the re-throw causing this failure.
+"
+" It also makes the errors a little more easy to read since the Vim context is
+" removed. (This context provides little troubleshooting assistance in simple
+" scripts.) For that reason this function may usefully be used in processing
+" all exceptions before operating on them.
+function! s:exception_error(exception) abort
+    let l:matches = matchlist(a:exception, '^Vim\%((\a\+)\)\=:\(E\d\+\p\+$\)')
+    return (!empty(l:matches) && !empty(l:matches[1])) ? l:matches[1]
+                \                                      : a:exception
+endfunction
+
 " s:filename(key, val)    {{{1
 
 ""
@@ -316,8 +415,8 @@ function! s:insert_figure() abort
         echo ' '  | " ensure move to a new line
         let l:prompt  = 'Image filepath appears to be invalid:'
         let l:options = []
-        call add(l:options, {'Proceed anyway': g:dn_true})
-        call add(l:options, {'Abort': g:dn_false})
+        call add(l:options, {'Proceed anyway': v:true})
+        call add(l:options, {'Abort': v:false})
         let l:proceed = dn#util#menuSelect(l:options, l:prompt)
         if !l:proceed | return | endif
     endif
@@ -496,11 +595,11 @@ endfunction
 " Determines whether dn-utils plugin is loaded.
 function! s:utils_missing() abort
     if exists('g:loaded_dn_utils')
-        return g:dn_false
+        return v:false
     else
         echoerr 'dn-markdown ftplugin cannot find the dn-utils plugin'
         echoerr 'dn-markdown ftplugin requires the dn-utils plugin'
-        return g:dn_true
+        return v:true
     endif
 endfunction
 
@@ -521,27 +620,24 @@ endfunction
 "
 " For the purposes of this plugin a buffer is also invalid if it does not have
 " a markdown filetype.
+"
+" @throws InvalidBufNr
 function! s:valid_bufnr(bufnr) abort
     " check params
     if type(a:bufnr) != type(0)  " check bufnr data type
         let l:msg = 'Expected buffer number, got '
                     \ . s:variable_type(a:bufnr) . ': ' . a:bufnr
-        call dn#util#error(l:msg)
-        return
+        throw l:msg
     endif
     if !bufexists(a:bufnr)  " check bufnr exists
-        call dn#util#error('Buffer ' . a:bufnr . ' does not exist')
-        return
+        throw 'Buffer ' . a:bufnr . ' does not exist'
     endif
     if empty(bufname(a:bufnr))  " check buffer associated with a file
-        call dn#util#error('No file associated with buffer ' . a:bufnr)
-        return
+        throw 'No file associated with buffer ' . a:bufnr
     endif
     let l:ft = getbufvar(a:bufnr, '&filetype')  " check buffer file type
     if !s:md_filetype(l:ft)
-        let l:msg = 'Buffer ' . a:bufnr . ' has non-md filetype: ' . l:ft
-        call dn#util#error(l:msg)
-        return
+        throw 'Buffer ' . a:bufnr . ' has non-md filetype: ' . l:ft
     endif
     " valid if survived tests
     return 1
@@ -569,7 +665,7 @@ endfunction
 
 " Public functions
 
-" dn#md_util#addBoilerplate([insert])    {{{1
+" dn#md#addBoilerplate([insert])    {{{1
 
 ""
 " @public
@@ -578,7 +674,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_util#addBoilerplate(...) abort
+function! dn#md#addBoilerplate(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -601,10 +697,13 @@ function! dn#md_util#addBoilerplate(...) abort
         redraw!
     endtry
     " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+    if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
-" dn#md_util#cleanAllBuffers([insert])    {{{1
+" dn#md#cleanAllBuffers(arg)    {{{1
+
+" - in block below @default must be a single line to be processed correctly by
+"   vimdoc, so take care when formatting, e.g., with |gq|
 
 ""
 " @public
@@ -616,59 +715,99 @@ endfunction
 " file name and have a markdown file type. When output artefacts are located
 " the user is asked for confirmation before deletion.
 "
-" The [insert] argument has a boolean value which determines whether or not
-" the function was entered from insert mode.
-" @default insert=0
-function! dn#md_util#cleanAllBuffers(...) abort
+" Optional [arg] is a |Dictionary| with a number of valid keys, all of which
+" are themselves optional:
+"
+" key "confirm" (bool)
+" * whether, if output artefacts are detected, to ask user for confirmation
+"   before anything is deleted
+" 
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
+" 
+" key "pause_end" (bool)
+" * whether to pause after action taken; will not pause if no actions taken
+"   and no feedback provided
+" 
+" key "insert" (bool)
+" * whether or not the function was entered from insert mode
+"
+" key "pause_exit" (bool)
+" * whether to pause after all actions before exiting vim; will not pause if
+"   no actions taken and no feedback provided
+"
+" @default arg={'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+function! dn#md#cleanAllBuffers(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
     " process params
-    let l:insert = (a:0 && a:1)
+    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+    let l:arg = s:complete_arg(a:0 ? a:1 : {})
+    let l:action_taken = v:false
     " cycle through buffers, acting only on those with markdown files
     for l:bufnr in range(1, bufnr('$'))
         if !bufexists(l:bufnr) | continue | endif
         if empty(bufname(l:bufnr)) | continue | endif
         if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
-        call s:clean_output(l:bufnr, 1)
-        call s:prompt()
+        if s:clean_output(l:arg) | let l:action_taken = v:true | endif
     endfor
+    " pause at end if pause_exit requested
+    " - since assume this function called only on vim exit
+    if l:action_taken | call s:prompt() | endif
     " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+    if l:arg.insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
-" dn#md_util#cleanBuffer(buffer_number[, confirm[, insert]])    {{{1
+" dn#md#cleanBuffer([arg])    {{{1
+
+" - in block below @default must be a single line to be processed correctly by
+"   vimdoc, so take care when formatting, e.g., with |gq|
 
 ""
 " @public
 " Deletes common output artefacts: output files with extensions "htm", "html",
 " "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
 "
-" Searches for output located in the file directory associated with buffer
-" {buffer_number}.
+" Optional [arg] is a |Dictionary| with a number of valid keys, all of which
+" are themselves optional:
 "
-" If [confirm] is true, the user will be asked for confirmation before
-" deleting output artefacts. (If there are no artefacts the user is not asked
-" for confirmation.)
-" @default confirm=0
+" key "bufnr" (number)
+" * buffer number to process for output
 "
-" The [insert] argument has a boolean value which determines whether or not
-" the function was entered from insert mode.
-" @default insert=0
-function! dn#md_util#cleanBuffer(bufnr, ...) abort
+" key "confirm" (bool)
+" * whether, if output artefacts are detected, to ask user for confirmation
+"   before anything is deleted
+" 
+" key "say_none" (bool)
+" * whether to display a message if no output artefacts are detected
+" 
+" key "pause_end" (bool)
+" * whether to pause after action taken; will not pause if no actions taken
+"   and no feedback provided
+" 
+" key "insert" (bool)
+" * whether or not the function was entered from insert mode
+"
+" key "pause_exit" (bool)
+" * whether to pause after all actions before exiting vim; will not pause if
+"   no actions taken and no feedback provided
+"
+" @default arg={'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end': false, 'insert': false, 'pause_exit': false}
+function! dn#md#cleanBuffer(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
     " params
-    let l:confirm = (a:0 > 0 && a:1)
-    let l:insert = (a:0 > 1 && a:2)
+    if a:0 > 1 | throw 'Expected one argument, got ' . a:0 | endif
+    let l:arg = s:complete_arg(a:0 ? a:1 : {})
     " clean output files
-    call s:clean_output(a:bufnr, l:confirm)
+    call s:clean_output(l:arg)
     " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+    if l:arg.insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
-" dn#md_util#insertFigure([insert])    {{{1
+" dn#md#insertFigure([insert])    {{{1
 
 ""
 " @public
@@ -677,7 +816,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_util#insertFigure(...) abort
+function! dn#md#insertFigure(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -686,10 +825,10 @@ function! dn#md_util#insertFigure(...) abort
     " insert figure
     call s:insert_figure()
     " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+    if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
-" dn#md_util#panzerifyMetadata([insert])    {{{1
+" dn#md#panzerifyMetadata([insert])    {{{1
 
 ""
 " @public
@@ -699,7 +838,7 @@ endfunction
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
 " @default insert=false
-function! dn#md_util#panzerifyMetadata(...) abort
+function! dn#md#panzerifyMetadata(...) abort
     " universal tasks
     echo '' |  " clear command line
     if s:utils_missing() | return | endif  " requires dn-utils plugin
@@ -755,7 +894,7 @@ function! dn#md_util#panzerifyMetadata(...) abort
         redraw!
     endtry
     " return to calling mode
-    if l:insert | call dn#util#insertMode(g:dn_true) | endif
+    if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
 " vim: set foldmethod=marker :

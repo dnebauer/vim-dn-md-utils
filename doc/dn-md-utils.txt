@@ -51,8 +51,8 @@ normally load.
 
                                                         *b:dn_md_no_autoclean*
 Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
-deleted or vim exits. For more information see |dn#util#cleanBuffer()|,
-|dn#util#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
+deleted or vim exits. For more information see |dn#md#cleanBuffer()|,
+|dn#md#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
 
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
@@ -88,15 +88,14 @@ boilerplate for this is:
        [source]:
 <
 The default metadata block and reference link definitions are added to a
-document by the function |dn#md_util#addBoilerplate()|, which can be called
-using the command |:MUAddBoilerplate| and mapping "<Leader>ab" (see
+document by the function |dn#md#addBoilerplate()|, which can be called using
+the command |:MUAddBoilerplate| and mapping "<Leader>ab" (see
 |dn-md-utils-mappings|).
 
 Previously created markdown files have yaml metadata blocks that do not use
 panzer. Those metadata blocks can be "panzerified" using the
-|dn#md_util#panzerifyMetadata()| function, which can be called using the
-command |:MUPanzerifyMetadata| and mapping "<Leader>pm" (see
-|dn-md-utils-mappings|).
+|dn#md#panzerifyMetadata()| function, which can be called using the command
+|:MUPanzerifyMetadata| and mapping "<Leader>pm" (see |dn-md-utils-mappings|).
 
 IMAGES
 
@@ -119,9 +118,9 @@ document prefixed with three spaces. For example:
        [packed]: resources/packed.png "Tuck boxes packed away"
        {#fig:packed .class width="50%"}
 <
-A figure is inserted on the following line using the
-|dn#md_util#insertFigure()| function, which can be called using the command
-|:MUInsertFigure| and mapping "<Leader>fig" (see |dn-md-utils-mappings|).
+A figure is inserted on the following line using the |dn#md#insertFigure()|
+function, which can be called using the command |:MUInsertFigure| and mapping
+"<Leader>fig" (see |dn-md-utils-mappings|).
 
 OUTPUT
 
@@ -135,7 +134,7 @@ directory searched for items to delete is the directory in which the file in
 the current buffer is located.
 
 If the file being edited is FILE.ext, the files that will be deleted have
-names like "FILE.html" and "FILE.pdf" (see |dn#md_util#cleanBuffer()| for a
+names like "FILE.html" and "FILE.pdf" (see |dn#md#cleanBuffer()| for a
 complete list). The temporary output subdirectory ".tmp" will also be
 recursively force deleted. Warning: This plugin does not check that it is safe
 to delete files and directories identified for deletion. For example, it does
@@ -152,21 +151,21 @@ output files/directories and, if any are found, asks the user whether to
 delete them. See |dn-md-utils-autocmds| for further details.
 
 Output files and directories associated with the current buffer can be deleted
-at any time by using the |dn#md_util#cleanBuffer()| function, which can be
-called using the command |:MUCleanOutput| and mapping "<Leader>co" (see
+at any time by using the |dn#md#cleanBuffer()| function, which can be called
+using the command |:MUCleanOutput| and mapping "<Leader>co" (see
 |dn-md-utils-mappings|).
 
 ==============================================================================
 FUNCTIONS                                              *dn-md-utils-functions*
 
-dn#md_util#addBoilerplate([insert])              *dn#md_util#addBoilerplate()*
+dn#md#addBoilerplate([insert])                        *dn#md#addBoilerplate()*
   Adds panzer/markdown boilerplate to the top and bottom of the document.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
 
-dn#md_util#cleanAllBuffers([insert])            *dn#md_util#cleanAllBuffers()*
+dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
   Deletes common output artefacts: output files with extensions like "html"
   and "pdf", and temporary directories like ".tmp". (See
   |dn#util#cleanBuffer()| for a complete list.)
@@ -175,35 +174,69 @@ dn#md_util#cleanAllBuffers([insert])            *dn#md_util#cleanAllBuffers()*
   file name and have a markdown file type. When output artefacts are located
   the user is asked for confirmation before deletion.
 
-  The [insert] argument has a boolean value which determines whether or not
-  the function was entered from insert mode.
-  [insert] is 0 if omitted.
+  Optional [arg] is a |Dictionary| with a number of valid keys, all of which
+  are themselves optional:
 
-dn#md_util#cleanBuffer({buffer_number}, [confirm], [insert])
-                                                    *dn#md_util#cleanBuffer()*
+  key "confirm" (bool)
+    * whether, if output artefacts are detected, to ask user for confirmation
+      before anything is deleted
+
+  key "say_none" (bool)
+    * whether to display a message if no output artefacts are detected
+
+  key "pause_end" (bool)
+    * whether to pause after action taken; will not pause if no actions taken
+      and no feedback provided
+
+  key "insert" (bool)
+    * whether or not the function was entered from insert mode
+
+  key "pause_exit" (bool)
+    * whether to pause after all actions before exiting vim; will not pause if
+      no actions taken and no feedback provided
+
+  [arg] is {'confirm': false, 'say_none': false, 'pause_end': false, 'insert':
+  false, 'pause_exit': false} if omitted.
+
+dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
   Deletes common output artefacts: output files with extensions "htm", "html",
   "pdf", "epub", and "mobi"; and temporary directories names ".tmp".
 
-  Searches for output located in the file directory associated with buffer
-  {buffer_number}.
+  Optional [arg] is a |Dictionary| with a number of valid keys, all of which
+  are themselves optional:
 
-  If [confirm] is true, the user will be asked for confirmation before
-  deleting output artefacts. (If there are no artefacts the user is not asked
-  for confirmation.)
-  [confirm] is 0 if omitted.
+  key "bufnr" (number)
+    * buffer number to process for output
 
-  The [insert] argument has a boolean value which determines whether or not
-  the function was entered from insert mode.
-  [insert] is 0 if omitted.
+  key "confirm" (bool)
+    * whether, if output artefacts are detected, to ask user for confirmation
+      before anything is deleted
 
-dn#md_util#insertFigure([insert])                  *dn#md_util#insertFigure()*
+  key "say_none" (bool)
+    * whether to display a message if no output artefacts are detected
+
+  key "pause_end" (bool)
+    * whether to pause after action taken; will not pause if no actions taken
+      and no feedback provided
+
+  key "insert" (bool)
+    * whether or not the function was entered from insert mode
+
+  key "pause_exit" (bool)
+    * whether to pause after all actions before exiting vim; will not pause if
+      no actions taken and no feedback provided
+
+  [arg] is {'bufnr': 0, 'confirm': false, 'say_none': false, 'pause_end':
+  false, 'insert': false, 'pause_exit': false} if omitted.
+
+dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   Inserts a figure on a new line.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
 
-dn#md_util#panzerifyMetadata([insert])        *dn#md_util#panzerifyMetadata()*
+dn#md#panzerifyMetadata([insert])                  *dn#md#panzerifyMetadata()*
   Adds a line to the initial metadata block, if present, for panzer styles.
   Intended for use when converting from plain pandoc to pandoc-plus-panzer.
 
@@ -215,20 +248,20 @@ dn#md_util#panzerifyMetadata([insert])        *dn#md_util#panzerifyMetadata()*
 COMMANDS                                                *dn-md-utils-commands*
 
 :[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
-  Calls |dn#md_util#addBoilerplate()| to add a metadata header template,
-  including title, author, date, and (panzer) styles, and a footer template
-  for url reference links.
+  Calls |dn#md#addBoilerplate()| to add a metadata header template, including
+  title, author, date, and (panzer) styles, and a footer template for url
+  reference links.
 
 :[N]MUCleanOutput                                             *:MUCleanOutput*
-  Calls |dn#md_util#cleanBuffer()| to delete output files and temporary output
+  Calls |dn#md#cleanBuffer()| to delete output files and temporary output
   directories. The user is not asked for confirmation before deletion.
 
 :[N]MUInsertFigure                                           *:MUInsertFigure*
-  Calls |dn#md_util#insertFigure()| to insert a figure on the following line.
+  Calls |dn#md#insertFigure()| to insert a figure on the following line.
 
 :[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
-  Calls |dn#md_util#panzerifyMetadata()| to add a line to the document's
-  metadata block for panzer styles.
+  Calls |dn#md#panzerifyMetadata()| to add a line to the document's metadata
+  block for panzer styles.
 
 ==============================================================================
 MAPPINGS                                                *dn-md-utils-mappings*
@@ -237,19 +270,19 @@ The following mappings are provided for both |Insert-mode| and |Normal-mode|:
 
 <Leader>ab
   * add markdown boilerplate
-  * calls |dn#md_util#addBoilerplate()|
+  * calls |dn#md#addBoilerplate()|
 
 <Leader>pm
   * convert yaml metadata block to use panzer
-  * calls |dn#md_util#panzerifyMetadata()|
+  * calls |dn#md#panzerifyMetadata()|
 
 <Leader>fig
   * insert figure on the following line
-  * calls |dn#md_util#insertFigure()|
+  * calls |dn#md#insertFigure()|
 
 <Leader>co
   * clean output files and temporary directories
-  * calls |dn#md_util#cleanBuffer()|
+  * calls |dn#md#cleanBuffer()|
 
 ==============================================================================
 VARIABLES                                                   *dn-md-utils-vars*

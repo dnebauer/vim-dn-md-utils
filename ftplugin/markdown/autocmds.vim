@@ -38,16 +38,20 @@ set cpoptions&vim
 " @setting b:dn_md_no_autoclean
 " Prevents automatic deletion ("cleaning") of output artefacts when a buffer
 " is deleted or vim exits. For more information see
-" @function(dn#util#cleanBuffer), @function(dn#util#cleanAllBuffers), and
+" @function(dn#md#cleanBuffer), @function(dn#md#cleanAllBuffers), and
 " @section(autocmds).
 
 if !(exists('b:dn_md_no_autoclean') && b:dn_md_no_autoclean)
     augroup dn_markdown
         autocmd!
-        autocmd BufDelete <buffer> 
-                    \ call dn#md_util#cleanBuffer(str2nr(expand('<abuf>')), 1, 0)
-        autocmd VimLeavePre * 
-                    \ call dn#md_util#cleanAllBuffers(0)
+        autocmd BufDelete <buffer>
+                    \ call dn#md#cleanBuffer({
+                    \      'bufnr' : str2nr(expand('<abuf>')),
+                    \     'confirm': v:true,
+                    \   'pause_end': v:true})
+        autocmd VimLeavePre *
+                    \ call dn#md#cleanAllBuffers({  'confirm': v:true,
+                    \                             'pause_end': v:true})
     augroup END
 endif
 
