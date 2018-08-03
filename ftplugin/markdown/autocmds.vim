@@ -1,4 +1,4 @@
-" Boilerplate    {{{1
+" Control statements    {{{1
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
 if exists('s:loaded') | finish | endif
 let s:loaded = 1
@@ -54,7 +54,7 @@ if !(exists('b:dn_md_no_autoclean') && b:dn_md_no_autoclean)
     augroup END
 endif
 
-" Boilerplate    {{{1
+" Control statements    {{{1
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
 " }}}1

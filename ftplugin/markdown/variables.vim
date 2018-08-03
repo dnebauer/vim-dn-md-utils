@@ -1,4 +1,4 @@
-" Boilerplate    {{{1
+" Control statements    {{{1
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
 if exists('s:loaded') | finish | endif
 let s:loaded = 1
@@ -94,7 +94,7 @@ if count(g:dn_help_plugins, 'dn-md-utils') == 0
 endif
 " }}}1
 
-" Boilerplate    {{{1
+" Control statements    {{{1
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
 " }}}1
