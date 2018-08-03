@@ -768,7 +768,10 @@ function! dn#md#cleanAllBuffers(...) abort
         for l:bufnr in range(1, bufnr('$'))
             if !bufexists(l:bufnr) | continue | endif
             if empty(bufname(l:bufnr)) | continue | endif
-            if !s:md_filetype(getbufvar(l:bufnr, '&filetype')) | continue | endif
+            if !s:md_filetype(getbufvar(l:bufnr, '&filetype'))
+                continue
+            endif
+            let l:arg.bufnr = l:bufnr
             if s:clean_output(l:arg) | let l:action_taken = v:true | endif
         endfor
         " pause at end if pause_exit requested
