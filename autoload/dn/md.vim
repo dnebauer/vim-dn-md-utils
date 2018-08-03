@@ -269,7 +269,7 @@ function! s:clean_output(...) abort
     endif
     " confirm deletion if necessary
     if l:arg.confirm
-        let l:output = join(map(l:fps + l:dirs, function('rm_dir')), ', ')
+        let l:output = join(map(l:fps + l:dirs, function('s:rm_dir')), ', ')
         let l:fname = fnamemodify(l:md_fp, ':t')
         let l:msg = 'Delete ' . l:fname . ' output (' . l:output . ') [y/N] '
         if !s:confirm(l:msg) | return | endif
