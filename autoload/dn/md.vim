@@ -3,8 +3,12 @@
 " Maintainer: David Nebauer
 " License: CC0
 
+" Control statements    {{{1
 set encoding=utf-8
 scriptencoding utf-8
+
+let s:save_cpo = &cpoptions
+set cpoptions&vim
 
 " Documentation {{{1
 
@@ -943,6 +947,11 @@ function! dn#md#panzerifyMetadata(...) abort
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
+" }}}1
+
+" Control statements    {{{1
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
 " }}}1
 
 " vim: set foldmethod=marker :
