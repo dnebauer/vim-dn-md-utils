@@ -628,7 +628,7 @@ endfunction
 " @private
 " Determines whether dn-utils plugin is loaded.
 function! s:utils_missing() abort
-    call dn#util#rev()  " for lazy plugin loaders
+    silent! call dn#util#rev()  " load function if available
     if exists('*dn#util#rev') && dn#util#rev() =~? '\v^\d{8,}$'
         return v:false
     else
