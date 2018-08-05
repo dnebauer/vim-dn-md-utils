@@ -628,7 +628,7 @@ endfunction
 " @private
 " Determines whether dn-utils plugin is loaded.
 function! s:utils_missing() abort
-    if exists('g:loaded_dn_utils')
+    if exists('*dn#util#rev') && dn#util#rev() =~? '\v^{\d{8,}$'
         return v:false
     else
         echoerr 'dn-markdown ftplugin cannot find the dn-utils plugin'
