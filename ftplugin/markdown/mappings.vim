@@ -6,6 +6,9 @@ if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
 if exists('s:loaded') | finish | endif
 let s:loaded = 1
 
+if exists('no_plugin_maps') || exists('no_markdown_maps')
+            \ || exists('no_md_maps') | finish | endif
+
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 

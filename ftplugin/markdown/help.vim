@@ -11,13 +11,10 @@ set cpoptions&vim
 " }}}1
 
 ""
-" @section Variables, vars
+" @section Help, help
 " This ftplugin contributes to the |dn-utils| plugin's help system (see
 " |dn#util#help()| for details). In the help system navigate to:
 " vim -> markdown ftplugin.
-
-" Filepath    {{{1
-let b:dn_md_filepath = simplify(resolve(expand('%:p')))
 
 " System help    {{{1
 if !exists('g:dn_help_plugins')

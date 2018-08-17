@@ -14,7 +14,7 @@ set cpoptions&vim
 
 ""
 " @section Introduction, intro
-" @order features mappings vars autocmds
+" @order intro features commands mappings autocmds functions help
 " An auxiliary filetype plugin for the markdown language.
 "
 " Previously the plugin author used a personal plugin to provide markdown-
