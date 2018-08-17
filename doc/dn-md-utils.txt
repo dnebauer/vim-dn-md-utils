@@ -54,6 +54,15 @@ Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
 deleted or vim exits. For more information see |dn#md#cleanBuffer()|,
 |dn#md#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
 
+                                                            *g:no_plugin_maps*
+Prevent loading of plugin mappings (|dn-md-utils-mappings|).
+
+                                                          *g:no_markdown_maps*
+Prevent loading of plugin mappings (|dn-md-utils-mappings|).
+
+                                                                *g:no_md_maps*
+Prevent loading of plugin mappings (|dn-md-utils-mappings|).
+
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
 
