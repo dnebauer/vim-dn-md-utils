@@ -1,5 +1,5 @@
 " Vim ftplugin for markdown
-" Last change: 2018 Jul 28
+" Last change: 2018 Aug 18
 " Maintainer: David Nebauer
 " License: CC0
 
