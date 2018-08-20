@@ -181,7 +181,7 @@ let s:md_filetypes = ['markdown', 'markdown.pandoc', 'pandoc']
 " Metadata skeleton for panzer styles.
 let s:metadata_style = [
             \ 'style:  [Standard, Latex14pt]',
-            \ '        # Latex8-12|14|17|20pt; PaginateSections; InludeFiles'
+            \ '        # Latex8-12|14|17|20pt; PaginateSections; IncludeFiles'
             \ ]
 
 " s:metadata_triad - metadata skeleton for title/author/date    {{{1
