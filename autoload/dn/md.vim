@@ -270,7 +270,7 @@ function! s:clean_output(...) abort
     catch  | throw s:exception_error(v:exception)
     endtry
     " identify deletion candidates
-    let l:md_fp = simplify(resolve(fnamemodify(bufname(l:arg.bufnr), ':p')))
+    let l:md_fp = simplify(fnamemodify(bufname(l:arg.bufnr), ':p'))
     let [l:fps, l:dirs] = s:output_artefacts(l:md_fp)
     call s:log([fnamemodify(l:md_fp, ':t')] + l:fps + l:dirs) " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
