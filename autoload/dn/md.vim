@@ -699,8 +699,6 @@ function! s:variable_type(var) abort
 endfunction
 " }}}1
 
-" Private functions
-
 " Public functions
 
 " dn#md#addBoilerplate([insert])    {{{1
