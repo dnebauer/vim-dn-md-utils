@@ -3,8 +3,8 @@ set encoding=utf-8
 scriptencoding utf-8
 
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
-if exists('s:loaded') | finish | endif
-let s:loaded = 1
+if exists('b:loaded_dn_md_utils_mappings') | finish | endif
+let b:loaded_dn_md_utils_mappings = 1
 
 ""
 " @setting g:no_plugin_maps

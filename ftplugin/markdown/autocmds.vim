@@ -3,8 +3,8 @@ set encoding=utf-8
 scriptencoding utf-8
 
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
-if exists('s:loaded') | finish | endif
-let s:loaded = 1
+if exists('b:loaded_dn_md_utils_autocmds') | finish | endif
+let b:loaded_dn_md_utils_autocmds = 1
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
