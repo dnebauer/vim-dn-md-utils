@@ -20,33 +20,35 @@ set cpoptions&vim
 " Previously the plugin author used a personal plugin to provide markdown-
 " related functionality. That plugin was retired when the plugin author
 " switched to the |vim-pandoc| plugin and panzer framework
-" (https://github.com/msprev/panzer) for markdown support. This plugin is
-" intended to address any gaps in markdown support provided by those tools.
+" (https://github.com/msprev/panzer) for markdown support. The @plugin(name)
+" ftplugin is intended to address any gaps in markdown support provided by
+" those tools.
 "
 " @subsection Dependencies
 "
-" Pandoc is used to generate output. It is not provided by this ftplugin.
-" This ftplugin depends on the |vim-pandoc| plugin and assumes panzer
+" Pandoc is used to generate output. It is not provided by the @plugin(name)
+" ftplugin, which depends on the |vim-pandoc| plugin and assumes panzer
 " (https://github.com/msprev/panzer) is installed and configured.
 "
-" This plugin is designed for use with pandoc version 2.0. At the time of
-" writing this is the development branch of pandoc, while the production
-" version is 1.19. As the change in major version number suggests, the
-" interfaces of these two versions of pandoc are incompatible. Hence, this
-" plugin will not work with the current production version of pandoc. There
-" are two known incompatibilities between these versions that affect this
-" plugin. The first is that the "smart" feature has changed from an option
-" ("--smart") to an extension ("--from=markdown+smart"). The second is a
-" change in the option used to specify the latex engine from "--latex-engine"
-" to "--pdf-engine".
+" The @plugin(name) ftplugin is designed for use with pandoc version 2.0. At
+" the time of writing this is the development branch of pandoc, while the
+" production version is 1.19. As the change in major version number suggests,
+" the interfaces of these two versions of pandoc are incompatible. Hence, the
+" @plugin(name) ftplugin will not work with the current production version of
+" pandoc. There are two known incompatibilities between these versions that
+" affect the @plugin(name) ftplugin. The first is that the "smart" feature has
+" changed from an option ("--smart") to an extension
+" ("--from=markdown+smart"). The second is a change in the option used to
+" specify the latex engine from "--latex-engine" to "--pdf-engine".
 "
-" This plugin also depends on the vim-dn-utils plugin
+" The @plugin(name) ftplugin also depends on the vim-dn-utils plugin
 " (https://github.com/dnebauer/vim-dn-utils).
 
 ""
 " @section Features, features
-" The major features of this plugin are support for yaml metadata blocks,
-" adding figures, and cleaning up output file and directories.
+" The major features of the @plugin(name) ftplugin are support for yaml
+" metadata blocks, adding figures, cleaning up output file and directories,
+" and altering the pandoc command line arguments.
 "
 " @subsection Metadata
 "
@@ -56,8 +58,8 @@ set cpoptions&vim
 " specify panzer-related values which, in turn, specify values used by pandoc
 " for document processing.
 "
-" This ftplugin assumes the following default yaml-metadata block is used at
-" the top of documents:
+" The @plugin(name) ftplugin assumes the following default yaml-metadata block
+" is used at the top of documents:
 " >
 "     ---
 "     title:  "[][source]"
@@ -115,10 +117,10 @@ set cpoptions&vim
 "
 " @subsection Output
 "
-" This plugin does not assist with generation of output, but does provide a
-" mapping, command and function for deleting output files and temporary output
-" directories. The term "clean" is used, as in the makefile keyword that
-" deletes all working and output files.
+" The @plugin(name) ftplugin does not assist with generation of output, but
+" does provide a mapping, command and function for deleting output files and
+" temporary output directories. The term "clean" is used, as in the makefile
+" keyword that deletes all working and output files.
 "
 " Cleaning of output only occurs if the current buffer contains a file. The
 " directory searched for items to delete is the directory in which the file in
@@ -127,30 +129,34 @@ set cpoptions&vim
 " If the file being edited is FILE.ext, the files that will be deleted have
 " names like "FILE.html" and "FILE.pdf" (see @function(dn#md#cleanBuffer)
 " for a complete list). The temporary output subdirectory ".tmp" will also be
-" recursively force deleted. Warning: This plugin does not check that it is
-" safe to delete files and directories identified for deletion. For example,
-" it does not check whether any of them are symlinks to other locations. Also
-" be aware that directories are forcibly and recursively deleted, as with the
-" *nix shell command "rm -fr".
+" recursively force deleted. Warning: the @plugin(name) ftplugin does not
+" check that it is safe to delete files and directories identified for
+" deletion. For example, it does not check whether any of them are symlinks to
+" other locations. Also be aware that directories are forcibly and recursively
+" deleted, as with the *nix shell command "rm -fr".
 "
 " When a markdown buffer is closed (actually when the |BufDelete| event
-" occurs), the plugin checks for output files/directories and, if any are
-" found, asks the user whether to delete them. If the user confirms deletion
-" they are removed. When vim exits (actually, when the |VimLeavePre| event
-" occurs) the plugin looks for any markdown buffers and looks in their
-" respective directories for output files/directories and, if any are found,
-" asks the user whether to delete them. See @section(autocmds) for further
-" details.
+" occurs), the @plugin(name) ftplugin checks for output files/directories and,
+" if any are found, asks the user whether to delete them. If the user confirms
+" deletion they are removed. When vim exits (actually, when the |VimLeavePre|
+" event occurs) the @plugin(name) ftplugin looks for any markdown buffers and
+" looks in their respective directories for output files/directories and, if
+" any are found, asks the user whether to delete them. See @section(autocmds)
+" for further details.
 " 
 " Output files and directories associated with the current buffer can be
 " deleted at any time by using the @function(dn#md#cleanBuffer) function,
 " which can be called using the command @command(MUCleanOutput) and mapping
 " "<Leader>co" (see @section(mappings)).
+"
+" @subsection Altering pandoc command line arguments
+"
+"
 
 ""
 " @setting b:disable_dn_md_utils
-" Prevents this plugin loading if set to a true value before this plugin would
-" normally load.
+" Prevents the @plugin(name) ftplugin loading if set to a true value before it
+" would normally load.
 
 " }}}1
 
@@ -605,6 +611,52 @@ function! s:prompt() abort
     echo "\n"
 endfunction
 
+" s:rebuild_pandoc_compiler_args()    {{{1
+
+""
+" @private
+" Rebuilds |vim-pandoc| plugin's |String| variable
+" |g:pandoc#compiler#arguments| from |Dict| variable
+" g:pandoc_compiler_arguments. The variable g:pandoc_compiler_argument is not
+" provided by the @plugin(name) ftplugin or the |vim-pandoc| plugin; it must
+" be created by the user, usually in their |vimrc|. This function aborts
+" silently if variable g:pandoc_compiler_arguments does not exist, is not a
+" |Dict|, or is empty.
+"
+" For arguments of type "--arg" add a key-value pair to
+" g:pandoc_compiler_arguments with key "--arg" and value |v:null|. For
+" arguments of type "--arg=something" add a key-value pair with key "--arg"
+" and value "something". When |g:pandoc#compiler#arguments| is built values
+" like "something" will be surrounded by double quotes if they are |String|,
+" or left naked if they are |Number| or |Float|. A value of any other type
+" will generate a non-fatal error message and that key-value pair will be
+" ignored.
+function! s:rebuild_pandoc_compiler_args()
+    " check source variable
+    if !exists('g:pandoc_compiler_arguments') | return | endif
+    if type(g:pandoc_compiler_arguments) != type({}) | return | endif
+    if empty(g:pandoc_compiler_arguments) | return | endif
+    " loop through Dict entries
+    let l:args = ''
+    for [l:arg, l:val] in items(g:pandoc_compiler_arguments)
+        let l:val_type = type(l:val)
+        if len(l:args) > 0 | let l:args .= ' ' | endif
+        if l:val is v:null
+            let l:args .= l:arg
+        elseif l:val_type == type(0) || l:val_type == type(0.0)
+            let l:args .= l:arg . '=' . l:val
+        elseif l:val_type == type('')
+            let l:args .= l:arg . '="' . l:val . '"'
+        else  " handle only string, float, number and null values
+            echohl Error
+            echo 'Invalid pandoc compiler argument: ' 
+                        \ . l:arg . '=' . string(l:val)
+            echohl Normal
+        endif
+    endfor
+    let g:pandoc#compiler#arguments = l:args
+endfunction
+
 " s:report_clean(deleted, failed)    {{{1
 
 ""
@@ -646,15 +698,15 @@ endfunction
 "
 " Note that some buffers can exist but not be visible with the |:ls| command.
 " For that reason this function checks that the supplied buffer number both
-" exists and is associated with a file. For the purposes of this plugin a
-" buffer number is invalid if it is not associated with a file name. This
-" aligns with the behaviour of pandoc since it will not generate output if a
-" buffer is not associated with a file. This also means an error will be
-" generated for the edge case where a user has created a buffer and set a
-" markdown filetype, but not saved the buffer as a file.
+" exists and is associated with a file. For the purposes of the @plugin(name)
+" ftplugin a buffer number is invalid if it is not associated with a file
+" name. This aligns with the behaviour of pandoc since it will not generate
+" output if a buffer is not associated with a file. This also means an error
+" will be generated for the edge case where a user has created a buffer and
+" set a markdown filetype, but not saved the buffer as a file.
 "
-" For the purposes of this plugin a buffer is also invalid if it does not have
-" a markdown filetype.
+" For the purposes of the @plugin(name) ftplugin a buffer is also invalid if
+" it does not have a markdown filetype.
 " @throws NoBuffer if no buffer has specified buffer number
 " @throws NoFile if specified buffer has no associated file
 " @throws NonMDBuffer if specified buffer does not have a markdown filetype

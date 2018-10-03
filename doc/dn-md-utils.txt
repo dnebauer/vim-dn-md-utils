@@ -20,34 +20,36 @@ An auxiliary filetype plugin for the markdown language.
 Previously the plugin author used a personal plugin to provide markdown-
 related functionality. That plugin was retired when the plugin author switched
 to the |vim-pandoc| plugin and panzer framework
-(https://github.com/msprev/panzer) for markdown support. This plugin is
-intended to address any gaps in markdown support provided by those tools.
+(https://github.com/msprev/panzer) for markdown support. The dn-md-utils
+ftplugin is intended to address any gaps in markdown support provided by those
+tools.
 
 DEPENDENCIES
 
-Pandoc is used to generate output. It is not provided by this ftplugin. This
-ftplugin depends on the |vim-pandoc| plugin and assumes panzer
+Pandoc is used to generate output. It is not provided by the dn-md-utils
+ftplugin, which depends on the |vim-pandoc| plugin and assumes panzer
 (https://github.com/msprev/panzer) is installed and configured.
 
-This plugin is designed for use with pandoc version 2.0. At the time of
-writing this is the development branch of pandoc, while the production version
-is 1.19. As the change in major version number suggests, the interfaces of
-these two versions of pandoc are incompatible. Hence, this plugin will not
-work with the current production version of pandoc. There are two known
-incompatibilities between these versions that affect this plugin. The first is
-that the "smart" feature has changed from an option ("--smart") to an
-extension ("--from=markdown+smart"). The second is a change in the option used
-to specify the latex engine from "--latex-engine" to "--pdf-engine".
+The dn-md-utils ftplugin is designed for use with pandoc version 2.0. At the
+time of writing this is the development branch of pandoc, while the production
+version is 1.19. As the change in major version number suggests, the
+interfaces of these two versions of pandoc are incompatible. Hence, the
+dn-md-utils ftplugin will not work with the current production version of
+pandoc. There are two known incompatibilities between these versions that
+affect the dn-md-utils ftplugin. The first is that the "smart" feature has
+changed from an option ("--smart") to an extension ("--from=markdown+smart").
+The second is a change in the option used to specify the latex engine from
+"--latex-engine" to "--pdf-engine".
 
-This plugin also depends on the vim-dn-utils plugin
+The dn-md-utils ftplugin also depends on the vim-dn-utils plugin
 (https://github.com/dnebauer/vim-dn-utils).
 
 ==============================================================================
 CONFIGURATION                                             *dn-md-utils-config*
 
                                                        *b:disable_dn_md_utils*
-Prevents this plugin loading if set to a true value before this plugin would
-normally load.
+Prevents the dn-md-utils ftplugin loading if set to a true value before it
+would normally load.
 
                                                         *b:dn_md_no_autoclean*
 Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
@@ -66,8 +68,9 @@ Prevent loading of plugin mappings (|dn-md-utils-mappings|).
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
 
-The major features of this plugin are support for yaml metadata blocks, adding
-figures, and cleaning up output file and directories.
+The major features of the dn-md-utils ftplugin are support for yaml metadata
+blocks, adding figures, cleaning up output file and directories, and altering
+the pandoc command line arguments.
 
 METADATA
 
@@ -77,8 +80,8 @@ file to specify values used by pandoc for document processing. With panzer
 specify panzer-related values which, in turn, specify values used by pandoc
 for document processing.
 
-This ftplugin assumes the following default yaml-metadata block is used at the
-top of documents:
+The dn-md-utils ftplugin assumes the following default yaml-metadata block is
+used at the top of documents:
 >
     ---
     title:  "[][source]"
@@ -134,10 +137,10 @@ function, which can be called using the command |:MUInsertFigure| and mapping
 
 OUTPUT
 
-This plugin does not assist with generation of output, but does provide a
-mapping, command and function for deleting output files and temporary output
-directories. The term "clean" is used, as in the makefile keyword that deletes
-all working and output files.
+The dn-md-utils ftplugin does not assist with generation of output, but does
+provide a mapping, command and function for deleting output files and
+temporary output directories. The term "clean" is used, as in the makefile
+keyword that deletes all working and output files.
 
 Cleaning of output only occurs if the current buffer contains a file. The
 directory searched for items to delete is the directory in which the file in
@@ -146,24 +149,29 @@ the current buffer is located.
 If the file being edited is FILE.ext, the files that will be deleted have
 names like "FILE.html" and "FILE.pdf" (see |dn#md#cleanBuffer()| for a
 complete list). The temporary output subdirectory ".tmp" will also be
-recursively force deleted. Warning: This plugin does not check that it is safe
-to delete files and directories identified for deletion. For example, it does
-not check whether any of them are symlinks to other locations. Also be aware
-that directories are forcibly and recursively deleted, as with the *nix shell
-command "rm -fr".
+recursively force deleted. Warning: the dn-md-utils ftplugin does not check
+that it is safe to delete files and directories identified for deletion. For
+example, it does not check whether any of them are symlinks to other
+locations. Also be aware that directories are forcibly and recursively
+deleted, as with the *nix shell command "rm -fr".
 
 When a markdown buffer is closed (actually when the |BufDelete| event occurs),
-the plugin checks for output files/directories and, if any are found, asks the
-user whether to delete them. If the user confirms deletion they are removed.
-When vim exits (actually, when the |VimLeavePre| event occurs) the plugin
-looks for any markdown buffers and looks in their respective directories for
-output files/directories and, if any are found, asks the user whether to
-delete them. See |dn-md-utils-autocmds| for further details.
+the dn-md-utils ftplugin checks for output files/directories and, if any are
+found, asks the user whether to delete them. If the user confirms deletion
+they are removed. When vim exits (actually, when the |VimLeavePre| event
+occurs) the dn-md-utils ftplugin looks for any markdown buffers and looks in
+their respective directories for output files/directories and, if any are
+found, asks the user whether to delete them. See |dn-md-utils-autocmds| for
+further details.
 
 Output files and directories associated with the current buffer can be deleted
 at any time by using the |dn#md#cleanBuffer()| function, which can be called
 using the command |:MUCleanOutput| and mapping "<Leader>co" (see
 |dn-md-utils-mappings|).
+
+ALTERING PANDOC COMMAND LINE ARGUMENTS
+
+
 
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*
