@@ -919,10 +919,10 @@ endfunction
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
     "let l:langs = dn#md#_highlightLanguagesSupported()
     "return filter(l:langs, {idx, val -> val =~ a:arg})
-    if !exists('s:hl_langs') || empty(s:hl_langs)
-        let s:hl_langs = dn#md#_highlightLanguagesSupported()
+    if !exists('dn#md#hl_langs') || empty(dn#md#hl_langs)
+        let dn#md#hl_langs = dn#md#_highlightLanguagesSupported()
     endif
-    return filter(s:hl_langs, {idx, val -> val =~ a:arg})
+    return filter(dn#md#hl_langs, {idx, val -> val =~ a:arg})
 endfunction
 
 " dn#md#_highlightLanguagesSupported()    {{{1
