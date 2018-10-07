@@ -306,7 +306,6 @@ function! s:clean_output(...) abort
     " identify deletion candidates
     let l:md_fp = simplify(fnamemodify(bufname(l:arg.bufnr), ':p'))
     let [l:fps, l:dirs] = s:output_artefacts(l:md_fp)
-    call s:log([fnamemodify(l:md_fp, ':t')] + l:fps + l:dirs) " DELETE LINE!
     if empty(l:fps) && empty(l:dirs)
         if l:arg.say_none | echomsg 'No output to clean up' | endif
         return
@@ -608,25 +607,6 @@ function! s:insert_highlight_language() abort
     " insert highlight language at current cursor location
     silent execute 'normal! A' . l:lang
     return
-endfunction
-
-" s:log(msg)    {{{1
-
-""
-" @private
-" Write {msg} to log file ~/dn-md-log. Note that {msg} can be a string or list
-" of strings.
-function! s:log(msg)
-    let l:log = $HOME . '/dn-md-log'
-    let l:msgs = []
-    if     type(a:msg) == type('')
-        call add(l:msgs, a:msg)
-    elseif type(a:msg) == type([])
-        call extend(l:msgs, a:msg)
-    else
-        call dn#util#error('Invalid log message')
-    endif
-    call writefile(l:msgs, l:log, 'a')
 endfunction
 
 " s:md_filetype(filetype)    {{{1
