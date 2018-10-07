@@ -650,7 +650,8 @@ function! s:insert_highlight_language() abort
     " obtain highlight language from user
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
-    let l:complete = 'customlist,s:highlight_language_completion'
+    "let l:complete = 'customlist,s:highlight_language_completion'
+    let l:complete = 'customlist,dn#md#_highlightLanguageCompletion'
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
     if !count(s:hl_languages, l:lang)
@@ -932,6 +933,21 @@ function! s:variable_type(var) abort
     endif
 endfunction
 " }}}1
+
+" Private functions
+
+" dn#md#_highlightLanguageCompletion(arg, line, pos)    {{{1
+
+""
+" @private
+" Custom command completion for highlight language, accepting the required
+" arguments of {arg}, {line}, and {pos} although the latter two are not used
+" (see |:command-completion-customlist|). Returns a |List| of highlight
+" languages.
+function! dn#md#_highlightLanguageCompletion(arg, line, pos)
+    return filter(s:hl_languages, {idx, val -> val =~ a:arg})
+endfunction  " }}}1
+
 
 " Public functions
 
