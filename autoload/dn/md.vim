@@ -190,13 +190,6 @@ set cpoptions&vim
 
 " Script variables
 
-" dn#md#hl_langs   - pandoc highlight languages    {{{1
-
-""
-" List of supported languages for syntax highlighting by pandoc.
-"
-let dn#md#hl_langs = []
-
 " s:clean_dirs     - temporary output directory names    {{{1
 
 ""
@@ -625,23 +618,13 @@ endfunction
 " @throws NoLangs if unable to get highlight languages from pandoc
 " @throws BadLang if user enters an invalid highlight language
 function! s:insert_highlight_language() abort
-    " ensure highlight languages list is available
-    "if empty(dn#md#hl_langs)
-    "    try
-    "        let l:langs = s:highlight_languages_supported()
-    "        let dn#md#hl_langs = l:langs
-    "    catch
-    "        call dn#util#error(dn#util#exceptionError(v:exception))
-    "        return
-    "    endtry
-    "endif
     " obtain highlight language from user
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
     let l:complete = 'customlist,dn#md#_highlightLanguageCompletion'
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
-    if !count(, l:lang)
+    if !count(dn#md#_highlightLanguagesSupported(), l:lang)
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
