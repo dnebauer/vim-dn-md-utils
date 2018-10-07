@@ -232,17 +232,22 @@ The following mappings are provided for both |Insert-mode| and |Normal-mode|:
   * add markdown boilerplate
   * calls |dn#md#addBoilerplate()|
 
-<Leader>pm
-  * convert yaml metadata block to use panzer
-  * calls |dn#md#panzerifyMetadata()|
+<Leader>co
+  * clean output files and temporary directories
+  * calls |dn#md#cleanBuffer()|
 
 <Leader>fig
   * insert figure on the following line
   * calls |dn#md#insertFigure()|
 
-<Leader>co
-  * clean output files and temporary directories
-  * calls |dn#md#cleanBuffer()|
+<Leader>hl
+  * user selects a code block highlight language to insert at the cursor
+    location
+  * calls |dn#md#insertHighlightLanguage()|
+
+<Leader>pm
+  * convert yaml metadata block to use panzer
+  * calls |dn#md#panzerifyMetadata()|
 
 ==============================================================================
 AUTOCOMMANDS                                            *dn-md-utils-autocmds*
@@ -373,6 +378,16 @@ dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
+
+dn#md#insertHighlightLanguage([insert])      *dn#md#insertHighlightLanguage()*
+  Select a code block highlight language which is inserted at the cursor
+  location.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+  Throws ERROR(NoLangs) if unable to get highlight languages from pandoc
+  Throws ERROR(BadLang) if user enters an invalid highlight language
 
 dn#md#panzerifyMetadata([insert])                  *dn#md#panzerifyMetadata()*
   Adds a line to the initial metadata block, if present, for panzer styles.

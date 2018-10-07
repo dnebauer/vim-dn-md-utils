@@ -202,6 +202,13 @@ let s:clean_dirs = ['.tmp']
 " Suffixes of output files that will be deleted by cleanup routine.
 let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
 
+" s:hl_languages   - pandoc highlight languages    {{{1
+
+""
+" List of supported languages for syntax highlighting by pandoc.
+"
+let s:hl_languages = []
+
 " s:md_filetypes   - valid markdown filetypes    {{{1
 
 ""
@@ -244,33 +251,6 @@ let s:refs = [
 " }}}1
 
 " Script functions
-
-" s:available_highlight_styles()    {{{1
-
-""
-" @private
-" Gets available pandoc highlight styles. This is done by executing the shell
-" command
-" >
-"     pandoc --list-highlight-styles
-" <
-" and capturing the output.
-" @throws NoStyles if unable to get highlight styles from pandoc
-function! s:available_highlight_styles() abort
-    let l:cmd = ['pandoc', '--list-highlight-styles']
-    let l:styles = systemlist(l:cmd)
-    if v:shell_error
-        " l:styles now contains shell error feedback
-        let l:err = ['Unable to obtain highlight styles from pandoc']
-        if !empty(l:styles)
-            call map(l:styles, '"  " . v:val')
-            call extend(l:err, ['Error message:'] + l:styles)
-        endif
-        call dn#util#warn(l:err)
-        throw 'ERROR(NoStyles) Unable to obtain pandoc highlight styles'
-    endif
-    return l:styles
-endfunction
 
 " s:clean_output([arg])    {{{1
 
@@ -483,6 +463,72 @@ function! s:fp_exists(fp)
     return !empty(glob(a:fp))
 endfunction
 
+" s:highlight_language_completion(arg, line, pos)    {{{1
+
+""
+" @private
+" Custom command completion for highlight language, accepting the required
+" arguments of {arg}, {line}, and {pos} although the latter two are not used
+" (see |:command-completion-customlist|). Returns a |List| of highlight
+" languages.
+function! s:highlight_language_completion(arg, line, pos)
+    return filter(s:hl_languages, {idx, val -> val =~ a:arg})
+endfunction
+
+" s:highlight_languages_supported()    {{{1
+
+""
+" @private
+" Gets supported pandoc highlight languages. This is done by executing the
+" shell command
+" >
+"     pandoc --list-highlight-languages
+" <
+" and capturing the output.
+" @throws NoLangs if unable to get highlight languages from pandoc
+function! s:highlight_languages_supported() abort
+    let l:cmd = ['pandoc', '--list-highlight-languages']
+    let l:langs = systemlist(l:cmd)
+    if v:shell_error
+        " l:langs now contains shell error feedback
+        let l:err = ['Unable to obtain highlight languages from pandoc']
+        if !empty(l:langs)
+            call map(l:langs, '"  " . v:val')
+            call extend(l:err, ['Error message:'] + l:langs)
+        endif
+        call dn#util#warn(l:err)
+        throw 'ERROR(NoLangs) Unable to obtain pandoc highlight languages'
+    endif
+    return l:langs
+endfunction
+
+" s:highlight_styles_available()    {{{1
+
+""
+" @private
+" Gets available pandoc highlight styles. This is done by executing the shell
+" command
+" >
+"     pandoc --list-highlight-styles
+" <
+" and capturing the output.
+" @throws NoStyles if unable to get highlight styles from pandoc
+function! s:highlight_styles_available() abort
+    let l:cmd = ['pandoc', '--list-highlight-styles']
+    let l:styles = systemlist(l:cmd)
+    if v:shell_error
+        " l:styles now contains shell error feedback
+        let l:err = ['Unable to obtain highlight styles from pandoc']
+        if !empty(l:styles)
+            call map(l:styles, '"  " . v:val')
+            call extend(l:err, ['Error message:'] + l:styles)
+        endif
+        call dn#util#warn(l:err)
+        throw 'ERROR(NoStyles) Unable to obtain pandoc highlight styles'
+    endif
+    return l:styles
+endfunction
+
 " s:insert_figure()    {{{1
 
 ""
@@ -581,6 +627,38 @@ function! s:insert_figure() abort
     endfor
     " reset cursor position
     call setpos('.', l:pos)
+endfunction
+
+" s:insert_highlight_language()    {{{1
+
+""
+" @private
+" Select a code block highlight language and insert it at the cursor location.
+" @throws NoLangs if unable to get highlight languages from pandoc
+" @throws BadLang if user enters an invalid highlight language
+function! s:insert_highlight_language() abort
+    " ensure highlight languages list is available
+    if empty(s:hl_languages)
+        try
+            let l:langs = s:highlight_languages_supported()
+            let s:hl_languages = l:langs
+        catch
+            call dn#util#error(dn#util#exceptionError(v:exception))
+            return
+        endtry
+    endif
+    " obtain highlight language from user
+    echo 'The Tab key provides language completion.'
+    let l:prompt = 'Enter highlight language (empty to abort): '
+    let l:complete - 'customlist,s:highlight_language_completion'
+    let l:lang = input(l:prompt, '', l:complete)
+    if empty(l:lang) | return | endif
+    if !count(s:hl_languages)
+        throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
+    endif
+    " insert highlight language at current cursor location
+    call dn#util#insertString(l:lang)
+    return
 endfunction
 
 " s:log(msg)    {{{1
@@ -925,7 +1003,7 @@ function! dn#md#changeHighlightStyle() abort
     endtry
     " get available highlight styles
     try
-        let l:styles = s:available_highlight_styles()
+        let l:styles = s:highlight_styles_available()
     catch
         call dn#util#error(s:exception_error(v:exception))
         return
@@ -1094,6 +1172,32 @@ function! dn#md#insertFigure(...) abort
     let l:insert = (a:0 > 0 && a:1)
     " insert figure
     call s:insert_figure()
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(v:true) | endif
+endfunction
+
+" dn#md#insertHighlightLanguage([insert])    {{{1
+
+""
+" @public
+" Select a code block highlight language which is inserted at the cursor
+" location.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+" @throws NoLangs if unable to get highlight languages from pandoc
+" @throws BadLang if user enters an invalid highlight language
+function! dn#md#insertHighlightLanguage(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    " insert figure
+    try   | call s:insert_highlight_language()
+    catch | call dn#util#error(dn#util#exceptionError(v:exception))
+    endtry
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction

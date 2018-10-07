@@ -33,17 +33,22 @@ set cpoptions&vim
 "   * add markdown boilerplate
 "   * calls @function(dn#md#addBoilerplate)
 "
-" <Leader>pm
-"   * convert yaml metadata block to use panzer
-"   * calls @function(dn#md#panzerifyMetadata)
+" <Leader>co
+"   * clean output files and temporary directories
+"   * calls @function(dn#md#cleanBuffer)
 "
 " <Leader>fig
 "   * insert figure on the following line
 "   * calls @function(dn#md#insertFigure)
 "
-" <Leader>co
-"   * clean output files and temporary directories
-"   * calls @function(dn#md#cleanBuffer)
+" <Leader>hl
+"   * user selects a code block highlight language to insert at the cursor
+"     location
+"   * calls @function(dn#md#insertHighlightLanguage)
+"
+" <Leader>pm
+"   * convert yaml metadata block to use panzer
+"   * calls @function(dn#md#panzerifyMetadata)
 
 " }}}1
 
@@ -84,6 +89,23 @@ endif
 nmap <buffer> <unique> <Plug>DnCON
             \ :call dn#md#cleanBuffer({   'bufnr': bufnr('%'),
             \                          'say_none': v:true})<CR>
+
+" \fig - insert figure    {{{1
+
+""
+" Calls @function(dn#md#insertHighlightLanguage) from |Insert-mode| and
+" |Normal-mode| to have the user select a code block highlight language which
+" is inserted at the cursor location.
+if !hasmapto('<Plug>DnHLI')
+    imap <buffer> <unique> <LocalLeader>hl <Plug>DnHLI
+endif
+imap <buffer> <unique> <Plug>DnHLI
+            \ <Esc>:call dn#md#insertHighlightLanguage(v:true)<CR>
+if !hasmapto('<Plug>DnHLN')
+    nmap <buffer> <unique> <LocalLeader>hl <Plug>DnHLN
+endif
+nmap <buffer> <unique> <Plug>DnHLN
+            \ :call dn#md#insertHighlightLanguage()<CR>
 
 " \fig - insert figure    {{{1
 
