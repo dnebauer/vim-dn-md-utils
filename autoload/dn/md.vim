@@ -627,7 +627,7 @@ function! s:insert_highlight_language() abort
     if empty(l:lang) | return | endif
     if !count(dn#md#_highlightLanguagesSupported(), l:lang)
         echo ' '
-        throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
+        throw "ERROR(BadLang): Invalid highlight language '" . l:lang . "'"
     endif
     " insert highlight language at current cursor location
     silent execute 'normal! A' . l:lang
