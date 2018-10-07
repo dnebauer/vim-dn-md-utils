@@ -280,11 +280,11 @@ dn#md#changeHighlightStyle()                    *dn#md#changeHighlightStyle()*
   defined in the |g:pandoc#compiler#arguments| variable, the variable value is
   adjusted to reflect the new style.
 
-  Note that the parser used for the variable |g:pandoc#compiler#arguments| is
-  simple and there are limitations to the syntax that can be used for
+  The parser used for the variable |g:pandoc#compiler#arguments| is simple and
+  there are limitations to the syntax that can be used for
   |g:pandoc#compiler#arguments|. For more details on the formatting of this
   variable, and the limitations of this method of specifying pandoc compiler
-  arguments, see subsection "Altering pandoc compiler arguments" in
+  arguments, see subsection "ALTERING PANDOC COMPILER ARGUMENTS" in
   |dn-md-utils-features|.
   Throws ERROR(BadParse) if unable to parse g:pandoc#compiler#arguments
   Throws ERROR(NoStyles) if unable to get available highlight styles
