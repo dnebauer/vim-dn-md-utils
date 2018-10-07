@@ -149,9 +149,37 @@ set cpoptions&vim
 " which can be called using the command @command(MUCleanOutput) and mapping
 " "<Leader>co" (see @section(mappings)).
 "
-" @subsection Altering pandoc command line arguments
+" @subsection Altering pandoc compiler arguments
 "
+" The |vim-pandoc| plugin provides the |String| variable
+" |g:pandoc#compiler#arguments| for users to configure. Any arguments it
+" contains are automatically passed to pandoc when the |:Pandoc| command is
+" invoked. The @plugin(name) ftplugin enables the user to make changes to the
+" arguments configured by this variable. The parser used by @plugin(name) is
+" very simple, so all arguments in the value for |g:pandoc#compiler#arguments|
+" must be separated by one or more spaces and have one of the following forms:
+" * --arg-with-no-value
+" * --arg="value"
 "
+" The number of leading dashes can be from one to three.
+"
+" To add an argument and value such as "-Vlang:spanish", treat it as though it
+" were an argument such as "--arg-with-no-value".
+"
+" This is only one method of specifying compiler arguments. For example,
+" another method is using the document yaml metadata block. If highlight style
+" is specified by multiple methods, the method that "wins" may depend on a
+" number of factors. Trial and error may be necessary to determine how
+" different methods of setting compiler arguments interact on a particular
+" system.
+"
+" The @plugin(name) ftplugin provides commands for adding and/or changing the
+" following pandoc command line argument:
+"
+" --highlight-style
+"   * see @command(MUChangeHighlightStyle)
+"   * user selects from available highlight styles
+"   * advises user of current value if already set
 
 ""
 " @setting b:disable_dn_md_utils
@@ -216,6 +244,33 @@ let s:refs = [
 " }}}1
 
 " Script functions
+
+" s:available_highlight_styles()    {{{1
+
+""
+" @private
+" Gets available pandoc highlight styles. This is done by executing the shell
+" command
+" >
+"     pandoc --list-highlight-styles
+" <
+" and capturing the output.
+" @throws NoStyles if unable to get highlight styles from pandoc
+function! s:available_highlight_styles() abort
+    let l:cmd = ['pandoc', '--list-highlight-styles']
+    let l:styles = systemlist(l:cmd)
+    if v:shell_error
+        " l:styles now contains shell error feedback
+        let l:err = ['Unable to obtain highlight styles from pandoc']
+        if !empty(l:styles)
+            call map(l:styles, '"  " . v:val')
+            call extend(l:err, ['Error message:'] + l:styles)
+        endif
+        call dn#util#warn(l:err)
+        throw 'ERROR(NoStyles) Unable to obtain pandoc highlight styles'
+    endif
+    return l:styles
+endfunction
 
 " s:clean_output([arg])    {{{1
 
@@ -428,18 +483,6 @@ function! s:fp_exists(fp)
     return !empty(glob(a:fp))
 endfunction
 
-" s:rm_dir(key, val)    {{{1
-
-""
-" @private
-" A |Funcref| intended to be used with a |map()| function to extract a list if
-" filenames from a list of filepaths, i.e., by removing ("rm") the directory
-" portion of the filepath ("rm_dir"). Uses the standard |Funcref| arguments
-" {key} and {val}.
-function! s:rm_dir(key, val)
-    return fnamemodify(a:val, ':t')
-endfunction
-
 " s:insert_figure()    {{{1
 
 ""
@@ -598,6 +641,63 @@ function! s:output_artefacts(filepath) abort
     return [l:fps, l:dirs]
 endfunction
 
+" s:parsed_compiler_args()    {{{1
+
+""
+" @private
+" Parses |g:pandoc#compiler#arguments| to extract arguments into a |Dict|.
+" Assumes all arguments in the |g:pandoc#compiler#arguments| |String| are
+" separated by one or more spaces and have one of the following forms:
+" * --arg-with-no-value
+" * --arg="value"
+"
+" The number of leading dashes can be from one to three.
+"
+" To add an argument and value such as "-Vlang:spanish", treat it as though it
+" were an argument such as "--arg-with-no-value".
+"
+" The |Dict| that is returned by this function has entries like:
+" >
+"     {'--arg-with-no-value': v:null, '---arg': 'value'}
+" <
+"
+" Returns an empty |Dict| if |g:pandoc#compiler#arguments| does not exist.
+" @throws BadParse if unable to parse g:pandoc#compiler#arguments
+function! s:parsed_compiler_args() abort
+    " handle case where no compiler args are set (the default)
+    if !exists('g:pandoc#compiler#arguments')
+                \ || empty(g:pandoc#compiler#arguments)
+        return {}
+    endif
+    let l:parse_err = "ERROR(BadParse): Can't parse"
+                \   . ' g:pandoc#compiler#arguments'
+    let l:args = {}
+    " match either '[-]--arg' or '[-]--arg="val"', then remainder
+    let l:arg_re = '\v^ *(-{1,3}[^ \=]+%(\="[^"]+")?) *(.*)$'
+    " match parts of two-part arg like '[-]--arg="val"'
+    let l:two_parts_re = '\v^(-{1,3}[^ \=]+)\="([^"]+)"$'
+    let l:remainder = g:pandoc#compiler#arguments
+    " each loop, extract first arg then pass remainder to next loop
+    while 1
+        let l:arg_matches = matchlist(l:remainder, l:arg_re)
+        if empty(l:arg_matches)
+            " means got all matches, but error if cmdline not exhausted
+            if !empty(l:remainder) | throw l:parse_err | endif
+            break
+        endif
+        let l:arg = l:arg_matches[1]
+        " if one-part arg, add to Dict with null value
+        " if two part arg, extract parts with Dict key=option and value=value
+        let l:two_parts = matchlist(l:arg, l:two_parts_re)
+        if   empty(l:two_parts) | let l:args[l:arg] = v:null
+        else                    | let l:args[l:two_parts[1]] = l:two_parts[2]
+        endif
+        " have processed arg match, now pass remainder to next loop
+        let l:remainder = l:arg_matches[2]
+    endwhile
+    return l:args
+endfunction
+
 " s:prompt()    {{{1
 
 ""
@@ -611,42 +711,33 @@ function! s:prompt() abort
     echo "\n"
 endfunction
 
-" s:rebuild_pandoc_compiler_args()    {{{1
+" s:rebuild_compiler_args(args)    {{{1
 
 ""
 " @private
 " Rebuilds |vim-pandoc| plugin's |String| variable
-" |g:pandoc#compiler#arguments| from |Dict| variable
-" g:pandoc_compiler_arguments. The variable g:pandoc_compiler_argument is not
-" provided by the @plugin(name) ftplugin or the |vim-pandoc| plugin; it must
-" be created by the user, usually in their |vimrc|. This function aborts
-" silently if variable g:pandoc_compiler_arguments does not exist, is not a
-" |Dict|, or is empty.
-"
-" For arguments of type "--arg" add a key-value pair to
-" g:pandoc_compiler_arguments with key "--arg" and value |v:null|. For
-" arguments of type "--arg=something" add a key-value pair with key "--arg"
-" and value "something". When |g:pandoc#compiler#arguments| is built values
-" like "something" will be surrounded by double quotes if they are |String|,
-" or left naked if they are |Number| or |Float|. A value of any other type
-" will generate a non-fatal error message and that key-value pair will be
-" ignored.
-function! s:rebuild_pandoc_compiler_args()
-    " check source variable
-    if !exists('g:pandoc_compiler_arguments') | return | endif
-    if type(g:pandoc_compiler_arguments) != type({}) | return | endif
-    if empty(g:pandoc_compiler_arguments) | return | endif
+" |g:pandoc#compiler#arguments| from {args} |Dict|. For arguments of type
+" "--arg" {args} uses an entry with key "--arg" and value |v:null|. For
+" arguments of type "--arg=something" {args} uses an entry with key "--arg"
+" and value "something". There can be from one to three dashes. For arguments
+" of the form "-Vlang:spanish" treat the compound as a single argument.
+" @throws BadArgType if argument exists and is not a |Dict|
+function! s:rebuild_compiler_args(args) abort
+    if type(a:args) != type({})
+        throw 'Error(BadArgType): Invalid argument: ' . string(a:args)
+    endif
     " loop through Dict entries
-    let l:args = ''
-    for [l:arg, l:val] in items(g:pandoc_compiler_arguments)
+    let l:arg_string = ''
+    for l:arg in sort(keys(a:args))  " sort to ensure predictability
+        let l:val = a:args[l:key]
         let l:val_type = type(l:val)
-        if len(l:args) > 0 | let l:args .= ' ' | endif
+        if len(l:arg_string) > 0 | let l:arg_string .= ' ' | endif
         if l:val is v:null
-            let l:args .= l:arg
+            let l:arg_string .= l:arg
         elseif l:val_type == type(0) || l:val_type == type(0.0)
-            let l:args .= l:arg . '=' . l:val
+            let l:arg_string .= l:arg . '=' . l:val
         elseif l:val_type == type('')
-            let l:args .= l:arg . '="' . l:val . '"'
+            let l:arg_string .= l:arg . '="' . l:val . '"'
         else  " handle only string, float, number and null values
             echohl Error
             echo 'Invalid pandoc compiler argument: ' 
@@ -654,7 +745,8 @@ function! s:rebuild_pandoc_compiler_args()
             echohl Normal
         endif
     endfor
-    let g:pandoc#compiler#arguments = l:args
+    let g:pandoc#compiler#arguments = l:arg_string
+    return
 endfunction
 
 " s:report_clean(deleted, failed)    {{{1
@@ -672,6 +764,18 @@ function! s:report_clean(deleted, failed) abort
         echomsg 'Errors occurred trying to delete:'
         for l:path in a:failed | echomsg '- ' . l:path | endfor
     endif
+endfunction
+
+" s:rm_dir(key, val)    {{{1
+
+""
+" @private
+" A |Funcref| intended to be used with a |map()| function to extract a list if
+" filenames from a list of filepaths, i.e., by removing ("rm") the directory
+" portion of the filepath ("rm_dir"). Uses the standard |Funcref| arguments
+" {key} and {val}.
+function! s:rm_dir(key, val)
+    return fnamemodify(a:val, ':t')
 endfunction
 
 " s:utils_missing()    {{{1
@@ -786,6 +890,71 @@ function! dn#md#addBoilerplate(...) abort
     endtry
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
+endfunction
+
+" dn#md#changeHighlightStyle()    {{{1
+
+""
+" @public
+" Change the existing pandoc highlight style, as set by the pandoc option
+" "--highlight-style". The user is informed of the existing highlight style
+" and then given the option to select from a list of available highlight
+" styles. The highlight style setting is added to the |vim-pandoc| module
+" variable |g:pandoc#compiler#arguments|; if the highlight style is already
+" defined in the |g:pandoc#compiler#arguments| variable, the variable value is
+" adjusted to reflect the new style.
+"
+" Note that the parser used for the variable |g:pandoc#compiler#arguments| is
+" simple and there are limitations to the syntax that can be used for
+" |g:pandoc#compiler#arguments|. For more details on the formatting of this
+" variable, and the limitations of this method of specifying pandoc compiler
+" arguments, see subsection "Altering pandoc compiler arguments" in
+" @section(features).
+" @throws BadParse if unable to parse g:pandoc#compiler#arguments
+" @throws NoStyles if unable to get available highlight styles
+function! dn#md#changeHighlightStyle() abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " parse existing compiler args
+    try
+        let l:args = s:parsed_compiler_args()
+    catch
+        call dn#util#error(s:exception_error(v:exception))
+        return
+    endtry
+    " get available highlight styles
+    try
+        let l:styles = s:available_highlight_styles()
+    catch
+        call dn#util#error(s:exception_error(v:exception))
+        return
+    endtry
+    " provide feedback
+    if has_key(l:args, '--highlight-style')
+        echo "Compiler arguments already include '--highlight-style'"
+                    \ . " setting of '" . l:args['--highlight-style'] . "'"
+    elseif count(l:styles, 'pygments')
+        echo 'Highlight style is not currently set via the'
+                    \ . 'g:pandoc#compiler#arguments variable'
+        echo "Highlight style will default to 'pygments' if not"
+                    \ . 'defined by another method'
+    else
+        echo 'Highlight style is not currently set via the'
+                    \ . 'g:pandoc#compiler#arguments variable'
+    endif
+    " select highlight style
+    let l:style = dn#util#menuSelect(l:styles, 'Select highlight style:')
+    if empty(l:style) | return | endif
+    " rebuild compiler arguments
+    let l:args['--highlight-style'] = l:style
+    try
+        call s:rebuild_compiler_args(l:args)
+    catch
+        call dn#util#error(dn#util#exceptionError(v:exception))
+        return
+    endtry
+    return
 endfunction
 
 " dn#md#cleanAllBuffers(arg)    {{{1

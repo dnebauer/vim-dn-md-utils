@@ -169,9 +169,36 @@ at any time by using the |dn#md#cleanBuffer()| function, which can be called
 using the command |:MUCleanOutput| and mapping "<Leader>co" (see
 |dn-md-utils-mappings|).
 
-ALTERING PANDOC COMMAND LINE ARGUMENTS
+ALTERING PANDOC COMPILER ARGUMENTS
 
+The |vim-pandoc| plugin provides the |String| variable
+|g:pandoc#compiler#arguments| for users to configure. Any arguments it
+contains are automatically passed to pandoc when the |:Pandoc| command is
+invoked. The dn-md-utils ftplugin enables the user to make changes to the
+arguments configured by this variable. The parser used by dn-md-utils is very
+simple, so all arguments in the value for |g:pandoc#compiler#arguments| must
+be separated by one or more spaces and have one of the following forms:
+  * --arg-with-no-value
+  * --arg="value"
 
+The number of leading dashes can be from one to three.
+
+To add an argument and value such as "-Vlang:spanish", treat it as though it
+were an argument such as "--arg-with-no-value".
+
+This is only one method of specifying compiler arguments. For example, another
+method is using the document yaml metadata block. If highlight style is
+specified by multiple methods, the method that "wins" may depend on a number
+of factors. Trial and error may be necessary to determine how different
+methods of setting compiler arguments interact on a particular system.
+
+The dn-md-utils ftplugin provides commands for adding and/or changing the
+following pandoc command line argument:
+
+--highlight-style
+  * see |:MUChangeHighlightStyle|
+  * user selects from available highlight styles
+  * advises user of current value if already set
 
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*
@@ -180,6 +207,10 @@ COMMANDS                                                *dn-md-utils-commands*
   Calls |dn#md#addBoilerplate()| to add a metadata header template, including
   title, author, date, and (panzer) styles, and a footer template for url
   reference links.
+
+:[N]MUChangeHighlightStyle                           *:MUChangeHighlightStyle*
+  Calls |dn#md#changeHighlightStyle()| to add, or change, the highlight style
+  setting in |g:pandoc#compiler#arguments|.
 
 :[N]MUCleanOutput                                             *:MUCleanOutput*
   Calls |dn#md#cleanBuffer()| to delete output files and temporary output
@@ -239,6 +270,24 @@ dn#md#addBoilerplate([insert])                        *dn#md#addBoilerplate()*
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
   [insert] is false if omitted.
+
+dn#md#changeHighlightStyle()                    *dn#md#changeHighlightStyle()*
+  Change the existing pandoc highlight style, as set by the pandoc option
+  "--highlight-style". The user is informed of the existing highlight style
+  and then given the option to select from a list of available highlight
+  styles. The highlight style setting is added to the |vim-pandoc| module
+  variable |g:pandoc#compiler#arguments|; if the highlight style is already
+  defined in the |g:pandoc#compiler#arguments| variable, the variable value is
+  adjusted to reflect the new style.
+
+  Note that the parser used for the variable |g:pandoc#compiler#arguments| is
+  simple and there are limitations to the syntax that can be used for
+  |g:pandoc#compiler#arguments|. For more details on the formatting of this
+  variable, and the limitations of this method of specifying pandoc compiler
+  arguments, see subsection "Altering pandoc compiler arguments" in
+  |dn-md-utils-features|.
+  Throws ERROR(BadParse) if unable to parse g:pandoc#compiler#arguments
+  Throws ERROR(NoStyles) if unable to get available highlight styles
 
 dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
   Deletes common output artefacts: output files with extensions like "html"

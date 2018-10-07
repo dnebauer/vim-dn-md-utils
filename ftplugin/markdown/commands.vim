@@ -12,7 +12,7 @@ set cpoptions&vim
 
 " Commands
 
-" MUAddBoilerplate    - add metadata and references boilerplate    {{{1
+" MUAddBoilerplate       - add metadata and references boilerplate    {{{1
 
 ""
 " Calls @function(dn#md#addBoilerplate) to add a metadata header template,
@@ -20,7 +20,14 @@ set cpoptions&vim
 " for url reference links.
 command -buffer MUAddBoilerplate call dn#md#addBoilerplate()
 
-" MUCleanOutput       - clean output    {{{1
+" MUChangeHighlightStyle - change highlight style cmdline arg    {{{1
+
+""
+" Calls @function(dn#md#changeHighlightStyle) to add, or change, the highlight
+" style setting in |g:pandoc#compiler#arguments|.
+command -buffer MUChangeHighlightStyle call dn#md#changeHighlightStyle()
+
+" MUCleanOutput          - clean output    {{{1
 
 ""
 " Calls @function(dn#md#cleanBuffer) to delete output files and temporary
@@ -29,14 +36,14 @@ command -buffer MUCleanOutput
             \ call dn#md#cleanBuffer({   'bufnr': bufnr('%'),
             \                         'say_none': v:true})
 
-" MUInsertFigure      - insert figure    {{{1
+" MUInsertFigure         - insert figure    {{{1
 
 ""
 " Calls @function(dn#md#insertFigure) to insert a figure on the following
 " line.
 command -buffer MUInsertFigure call dn#md#insertFigure()
 
-" MUPanzerifyMetadata - convert yaml metadata block to use panzer    {{{1
+" MUPanzerifyMetadata    - convert yaml metadata to use panzer    {{{1
 
 ""
 " Calls @function(dn#md#panzerifyMetadata) to add a line to the document's
