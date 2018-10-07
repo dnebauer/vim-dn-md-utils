@@ -626,15 +626,15 @@ endfunction
 " @throws BadLang if user enters an invalid highlight language
 function! s:insert_highlight_language() abort
     " ensure highlight languages list is available
-    if empty(dn#md#hl_langs)
-        try
-            let l:langs = s:highlight_languages_supported()
-            let dn#md#hl_langs = l:langs
-        catch
-            call dn#util#error(dn#util#exceptionError(v:exception))
-            return
-        endtry
-    endif
+    "if empty(dn#md#hl_langs)
+    "    try
+    "        let l:langs = s:highlight_languages_supported()
+    "        let dn#md#hl_langs = l:langs
+    "    catch
+    "        call dn#util#error(dn#util#exceptionError(v:exception))
+    "        return
+    "    endtry
+    "endif
     " obtain highlight language from user
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
