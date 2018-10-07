@@ -917,8 +917,12 @@ endfunction
 " (see |:command-completion-customlist|). Returns a |List| of highlight
 " languages.
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
-    let l:langs = dn#md#_highlightLanguagesSupported()
-    return filter(l:langs, {idx, val -> val =~ a:arg})
+    "let l:langs = dn#md#_highlightLanguagesSupported()
+    "return filter(l:langs, {idx, val -> val =~ a:arg})
+    if !exists('s:hl_langs') || empty(s:hl_langs)
+        let s:hl_langs = dn#md#_highlightLanguagesSupported()
+    endif
+    return filter(s:hl_langs, {idx, val -> val =~ a:arg})
 endfunction
 
 " dn#md#_highlightLanguagesSupported()    {{{1
