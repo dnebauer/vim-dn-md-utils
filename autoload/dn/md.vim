@@ -650,10 +650,10 @@ function! s:insert_highlight_language() abort
     " obtain highlight language from user
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
-    let l:complete - 'customlist,s:highlight_language_completion'
+    let l:complete = 'customlist,s:highlight_language_completion'
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
-    if !count(s:hl_languages)
+    if !count(s:hl_languages, l:lang)
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
