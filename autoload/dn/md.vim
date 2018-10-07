@@ -641,7 +641,7 @@ function! s:insert_highlight_language() abort
     let l:complete = 'customlist,dn#md#_highlightLanguageCompletion'
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
-    if !count(dn#md#hl_langs, l:lang)
+    if !count(, l:lang)
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
@@ -932,9 +932,37 @@ endfunction
 " (see |:command-completion-customlist|). Returns a |List| of highlight
 " languages.
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
-    let l:langs = s:highlight_languages_supported()
-    return filter(dn#md#hl_langs, {idx, val -> val =~ a:arg})
-endfunction  " }}}1
+    let l:langs = dn#md#_highlightLanguagesSupported()
+    return filter(l:langs, {idx, val -> val =~ a:arg})
+endfunction
+
+" dn#md#_highlightLanguagesSupported()    {{{1
+
+""
+" @private
+" Gets supported pandoc highlight languages. This is done by executing the
+" shell command
+" >
+"     pandoc --list-highlight-languages
+" <
+" and capturing the output. Returns a |List|.
+" @throws NoLangs if unable to get highlight languages from pandoc
+function! dn#md#_highlightLanguagesSupported() abort
+    let l:cmd = ['pandoc', '--list-highlight-languages']
+    let l:langs = systemlist(l:cmd)
+    if v:shell_error
+        " l:langs now contains shell error feedback
+        let l:err = ['Unable to obtain highlight languages from pandoc']
+        if !empty(l:langs)
+            call map(l:langs, '"  " . v:val')
+            call extend(l:err, ['Error message:'] + l:langs)
+        endif
+        call dn#util#warn(l:err)
+        throw 'ERROR(NoLangs) Unable to obtain pandoc highlight languages'
+    endif
+    return l:langs
+endfunction
+" }}}1
 
 
 " Public functions
