@@ -190,6 +190,13 @@ set cpoptions&vim
 
 " Script variables
 
+" dn#md#hl_langs   - pandoc highlight languages    {{{1
+
+""
+" List of supported languages for syntax highlighting by pandoc.
+"
+let dn#md#hl_langs = []
+
 " s:clean_dirs     - temporary output directory names    {{{1
 
 ""
@@ -201,13 +208,6 @@ let s:clean_dirs = ['.tmp']
 ""
 " Suffixes of output files that will be deleted by cleanup routine.
 let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
-
-" s:hl_languages   - pandoc highlight languages    {{{1
-
-""
-" List of supported languages for syntax highlighting by pandoc.
-"
-let s:hl_languages = []
 
 " s:md_filetypes   - valid markdown filetypes    {{{1
 
@@ -463,18 +463,6 @@ function! s:fp_exists(fp)
     return !empty(glob(a:fp))
 endfunction
 
-" s:highlight_language_completion(arg, line, pos)    {{{1
-
-""
-" @private
-" Custom command completion for highlight language, accepting the required
-" arguments of {arg}, {line}, and {pos} although the latter two are not used
-" (see |:command-completion-customlist|). Returns a |List| of highlight
-" languages.
-function! s:highlight_language_completion(arg, line, pos)
-    return filter(s:hl_languages, {idx, val -> val =~ a:arg})
-endfunction
-
 " s:highlight_languages_supported()    {{{1
 
 ""
@@ -638,10 +626,10 @@ endfunction
 " @throws BadLang if user enters an invalid highlight language
 function! s:insert_highlight_language() abort
     " ensure highlight languages list is available
-    if empty(s:hl_languages)
+    if empty(dn#md#hl_langs)
         try
             let l:langs = s:highlight_languages_supported()
-            let s:hl_languages = l:langs
+            let dn#md#hl_langs = l:langs
         catch
             call dn#util#error(dn#util#exceptionError(v:exception))
             return
@@ -650,11 +638,10 @@ function! s:insert_highlight_language() abort
     " obtain highlight language from user
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
-    "let l:complete = 'customlist,s:highlight_language_completion'
     let l:complete = 'customlist,dn#md#_highlightLanguageCompletion'
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
-    if !count(s:hl_languages, l:lang)
+    if !count(dn#md#hl_langs, l:lang)
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
@@ -945,7 +932,7 @@ endfunction
 " (see |:command-completion-customlist|). Returns a |List| of highlight
 " languages.
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
-    return filter(s:hl_languages, {idx, val -> val =~ a:arg})
+    return filter(dn#md#hl_langs, {idx, val -> val =~ a:arg})
 endfunction  " }}}1
 
 
