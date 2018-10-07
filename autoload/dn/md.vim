@@ -950,6 +950,7 @@ function! dn#md#changeHighlightStyle() abort
     let l:args['--highlight-style'] = l:style
     try
         call s:rebuild_compiler_args(l:args)
+        echomsg 'Highlight style set to "' . l:style . '"'
     catch
         call dn#util#error(dn#util#exceptionError(v:exception))
         return
