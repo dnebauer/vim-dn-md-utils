@@ -472,7 +472,7 @@ endfunction
 " >
 "     pandoc --list-highlight-languages
 " <
-" and capturing the output.
+" and capturing the output. Returns a |List|.
 " @throws NoLangs if unable to get highlight languages from pandoc
 function! s:highlight_languages_supported() abort
     let l:cmd = ['pandoc', '--list-highlight-languages']
@@ -499,7 +499,7 @@ endfunction
 " >
 "     pandoc --list-highlight-styles
 " <
-" and capturing the output.
+" and capturing the output. Returns a |List|.
 " @throws NoStyles if unable to get highlight styles from pandoc
 function! s:highlight_styles_available() abort
     let l:cmd = ['pandoc', '--list-highlight-styles']
@@ -932,6 +932,7 @@ endfunction
 " (see |:command-completion-customlist|). Returns a |List| of highlight
 " languages.
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
+    let l:langs = s:highlight_languages_supported()
     return filter(dn#md#hl_langs, {idx, val -> val =~ a:arg})
 endfunction  " }}}1
 

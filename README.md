@@ -54,4 +54,4 @@ setting by altering the pandoc compiler arguments defined by
 
 ## License ##
 
-This plugin is distributed under the GNU GPL version 3.`
+This plugin is distributed under the GNU GPL version 3.
