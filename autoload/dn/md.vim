@@ -729,7 +729,7 @@ function! s:rebuild_compiler_args(args) abort
     " loop through Dict entries
     let l:arg_string = ''
     for l:arg in sort(keys(a:args))  " sort to ensure predictability
-        let l:val = a:args[l:key]
+        let l:val = a:args[l:arg]
         let l:val_type = type(l:val)
         if len(l:arg_string) > 0 | let l:arg_string .= ' ' | endif
         if l:val is v:null
@@ -936,12 +936,12 @@ function! dn#md#changeHighlightStyle() abort
                     \ . " setting of '" . l:args['--highlight-style'] . "'"
     elseif count(l:styles, 'pygments')
         echo 'Highlight style is not currently set via the'
-                    \ . 'g:pandoc#compiler#arguments variable'
+                    \ . ' g:pandoc#compiler#arguments variable'
         echo "Highlight style will default to 'pygments' if not"
-                    \ . 'defined by another method'
+                    \ . ' defined by another method'
     else
         echo 'Highlight style is not currently set via the'
-                    \ . 'g:pandoc#compiler#arguments variable'
+                    \ . ' g:pandoc#compiler#arguments variable'
     endif
     " select highlight style
     let l:style = dn#util#menuSelect(l:styles, 'Select highlight style:')
