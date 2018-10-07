@@ -95,7 +95,7 @@ nmap <buffer> <unique> <Plug>DnCON
 ""
 " Calls @function(dn#md#insertHighlightLanguage) from |Insert-mode| and
 " |Normal-mode| to have the user select a code block highlight language which
-" is inserted at the cursor location.
+" is inserted at the end of the current line.
 if !hasmapto('<Plug>DnHLI')
     imap <buffer> <unique> <LocalLeader>hl <Plug>DnHLI
 endif

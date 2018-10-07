@@ -11,8 +11,9 @@ is intended to address any gaps in markdown support provided by those tools.
 ## Dependencies ##
 
 Pandoc is used to generate output. It is not provided by this ftplugin. This
-ftplugin depends on the [vim-pandoc](https://github.com/vim-pandoc/vim-pandoc) plugin and assumes
-[panzer](https://github.com/msprev/panzer) is installed and configured.
+ftplugin depends on the [vim-pandoc](https://github.com/vim-pandoc/vim-pandoc)
+plugin and assumes [panzer](https://github.com/msprev/panzer) is installed and
+configured.
 
 This plugin is designed for use with pandoc version 2.0. At the time of writing
 this is the development branch of pandoc, while the production version is 1.19.
@@ -51,6 +52,9 @@ disabled.
 Provides a function and command for changing the pandoc `--highlight-style`
 setting by altering the pandoc compiler arguments defined by
 [vim-pandoc](https://github.com/vim-pandoc/vim-pandoc).
+
+Provides a function and mapping for selecting a supported code block highlight
+language and inserting it at the end of the current line.
 
 ## License ##
 

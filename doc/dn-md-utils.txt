@@ -380,8 +380,8 @@ dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   [insert] is false if omitted.
 
 dn#md#insertHighlightLanguage([insert])      *dn#md#insertHighlightLanguage()*
-  Select a code block highlight language which is inserted at the cursor
-  location.
+  Select a code block highlight language which is inserted at the end of the
+  current line.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.

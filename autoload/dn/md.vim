@@ -614,7 +614,8 @@ endfunction
 
 ""
 " @private
-" Select a code block highlight language and insert it at the cursor location.
+" Select a code block highlight language and insert it at the end of the
+" current line.
 " @throws NoLangs if unable to get highlight languages from pandoc
 " @throws BadLang if user enters an invalid highlight language
 function! s:insert_highlight_language() abort
@@ -1195,8 +1196,8 @@ endfunction
 
 ""
 " @public
-" Select a code block highlight language which is inserted at the cursor
-" location.
+" Select a code block highlight language which is inserted at the end of the
+" current line.
 "
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
