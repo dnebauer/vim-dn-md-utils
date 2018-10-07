@@ -627,7 +627,7 @@ function! s:insert_highlight_language() abort
     catch | throw dn#util#exceptionError(v:exception)
     endtry
     if empty(l:lang) | return | endif
-    try   | let l:valid_langs = dn#md#_highlightLanguageCompletion()
+    try   | let l:valid_langs = dn#md#_highlightLanguagesSupported()
     catch | throw dn#util#exceptionError(v:exception)
     endtry
     let l:err = "ERROR(BadLang): Invalid highlight language '" . l:lang . "'"
