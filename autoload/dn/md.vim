@@ -456,33 +456,6 @@ function! s:fp_exists(fp)
     return !empty(glob(a:fp))
 endfunction
 
-" s:highlight_languages_supported()    {{{1
-
-""
-" @private
-" Gets supported pandoc highlight languages. This is done by executing the
-" shell command
-" >
-"     pandoc --list-highlight-languages
-" <
-" and capturing the output. Returns a |List|.
-" @throws NoLangs if unable to get highlight languages from pandoc
-function! s:highlight_languages_supported() abort
-    let l:cmd = ['pandoc', '--list-highlight-languages']
-    let l:langs = systemlist(l:cmd)
-    if v:shell_error
-        " l:langs now contains shell error feedback
-        let l:err = ['Unable to obtain highlight languages from pandoc']
-        if !empty(l:langs)
-            call map(l:langs, '"  " . v:val')
-            call extend(l:err, ['Error message:'] + l:langs)
-        endif
-        call dn#util#warn(l:err)
-        throw 'ERROR(NoLangs) Unable to obtain pandoc highlight languages'
-    endif
-    return l:langs
-endfunction
-
 " s:highlight_styles_available()    {{{1
 
 ""
@@ -953,7 +926,6 @@ function! dn#md#_highlightLanguagesSupported() abort
     return l:langs
 endfunction
 " }}}1
-
 
 " Public functions
 
