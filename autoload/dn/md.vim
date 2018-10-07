@@ -628,7 +628,7 @@ function! s:insert_highlight_language() abort
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
-    call dn#util#insertString(l:lang)
+    silent execute 'normal! a' . l:lang
     return
 endfunction
 
