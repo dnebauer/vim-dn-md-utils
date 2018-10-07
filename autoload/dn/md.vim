@@ -626,6 +626,7 @@ function! s:insert_highlight_language() abort
     let l:lang = input(l:prompt, '', l:complete)
     if empty(l:lang) | return | endif
     if !count(dn#md#_highlightLanguagesSupported(), l:lang)
+        echo ' '
         throw 'ERROR(BadLang): Invalid highlight language ' . l:lang
     endif
     " insert highlight language at current cursor location
