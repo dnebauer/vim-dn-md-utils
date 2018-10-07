@@ -627,10 +627,11 @@ function! s:insert_highlight_language() abort
     catch | throw dn#util#exceptionError(v:exception)
     endtry
     if empty(l:lang) | return | endif
-    " dn#md#hl_langs is created by dn#md#_highlightLanguageCompletion 
-    if !count(dn#md#hl_langs, l:lang)
-        throw "ERROR(BadLang): Invalid highlight language '" . l:lang . "'"
-    endif
+    try   | let l:valid_langs = dn#md#_highlightLanguageCompletion()
+    catch | throw dn#util#exceptionError(v:exception)
+    endtry
+    let l:err = "ERROR(BadLang): Invalid highlight language '" . l:lang . "'"
+    if !count(l:valid_langs, l:lang) | throw l:err | endif
     " insert highlight language at current cursor location
     silent execute 'normal! A' . l:lang
     return
