@@ -623,10 +623,12 @@ function! s:insert_highlight_language() abort
     echo 'The Tab key provides language completion.'
     let l:prompt = 'Enter highlight language (empty to abort): '
     let l:complete = 'customlist,dn#md#_highlightLanguageCompletion'
-    let l:lang = input(l:prompt, '', l:complete)
+    try   | let l:lang = input(l:prompt, '', l:complete)
+    catch | throw dn#util#exceptionError(v:exception)
+    endtry
     if empty(l:lang) | return | endif
-    if !count(dn#md#_highlightLanguagesSupported(), l:lang)
-        echo ' '
+    " dn#md#hl_langs is created by dn#md#_highlightLanguageCompletion 
+    if !count(dn#md#hl_langs, l:lang)
         throw "ERROR(BadLang): Invalid highlight language '" . l:lang . "'"
     endif
     " insert highlight language at current cursor location
@@ -917,8 +919,6 @@ endfunction
 " (see |:command-completion-customlist|). Returns a |List| of highlight
 " languages.
 function! dn#md#_highlightLanguageCompletion(arg, line, pos)
-    "let l:langs = dn#md#_highlightLanguagesSupported()
-    "return filter(l:langs, {idx, val -> val =~ a:arg})
     if !exists('dn#md#hl_langs') || empty(dn#md#hl_langs)
         let dn#md#hl_langs = dn#md#_highlightLanguagesSupported()
     endif
@@ -1216,8 +1216,11 @@ function! dn#md#insertHighlightLanguage(...) abort
     " params
     let l:insert = (a:0 > 0 && a:1)
     " insert figure
-    try   | call s:insert_highlight_language()
-    catch | call dn#util#error(dn#util#exceptionError(v:exception))
+    try
+        call s:insert_highlight_language()
+    catch
+        echo ' '
+        call dn#util#error(dn#util#exceptionError(v:exception))
     endtry
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
