@@ -22,7 +22,7 @@ set cpoptions&vim
 " deleted.
 "
 " For more information on automatic cleaning see
-" @function(dn#util#cleanBuffer).
+" @function(dn#md#cleanBuffer).
 "
 " The autocmds responsible for this behaviour can be found in the
 " "dn_markdown" autocmd group (see |autocmd-groups|) and can be viewed (see

@@ -254,7 +254,7 @@ let s:refs = [
 " @private
 " Deletes common output artefacts: output files with extensions like "html"
 " and "pdf", and temporary directories like ".tmp". (See
-" @function(dn#util#cleanOutput) for a complete list.)
+" @function(dn#md#cleanOutput) for a complete list.)
 "
 " Returns boolean indicating whether any output was deleted.
 "
@@ -625,7 +625,7 @@ endfunction
 " @private
 " Finds common output artefacts, i.e., output files with extensions like
 " "html" and "pdf", and temporary directories like ".tmp". (See
-" @function(dn#util#cleanBuffer) for a complete list.) Uses directory and base
+" @function(dn#md#cleanBuffer) for a complete list.) Uses directory and base
 " name from {filepath}.
 "
 " Returns a two item list with the first item being a list of located output
@@ -1017,7 +1017,7 @@ endfunction
 " @public
 " Deletes common output artefacts: output files with extensions like "html"
 " and "pdf", and temporary directories like ".tmp". (See
-" @function(dn#util#cleanBuffer) for a complete list.)
+" @function(dn#md#cleanBuffer) for a complete list.)
 "
 " Searches sequentially through all buffers that are both associated with a
 " file name and have a markdown file type. When output artefacts are located

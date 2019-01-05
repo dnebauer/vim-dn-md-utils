@@ -258,7 +258,7 @@ markdown file type), and to automatically clean output files and directories
 associated with all markdown file buffers when vim exits. In all case the user
 is asked for confirmation before any files or directories are deleted.
 
-For more information on automatic cleaning see |dn#util#cleanBuffer()|.
+For more information on automatic cleaning see |dn#md#cleanBuffer()|.
 
 The autocmds responsible for this behaviour can be found in the "dn_markdown"
 autocmd group (see |autocmd-groups|) and can be viewed (see |autocmd-list|).
@@ -296,8 +296,8 @@ dn#md#changeHighlightStyle()                    *dn#md#changeHighlightStyle()*
 
 dn#md#cleanAllBuffers([arg])                         *dn#md#cleanAllBuffers()*
   Deletes common output artefacts: output files with extensions like "html"
-  and "pdf", and temporary directories like ".tmp". (See
-  |dn#util#cleanBuffer()| for a complete list.)
+  and "pdf", and temporary directories like ".tmp". (See |dn#md#cleanBuffer()|
+  for a complete list.)
 
   Searches sequentially through all buffers that are both associated with a
   file name and have a markdown file type. When output artefacts are located
