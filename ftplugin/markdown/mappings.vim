@@ -5,18 +5,17 @@ scriptencoding utf-8
 if exists('b:disable_dn_md_utils') && b:disable_dn_md_utils | finish | endif
 if exists('b:loaded_dn_md_utils_mappings') | finish | endif
 let b:loaded_dn_md_utils_mappings = 1
-
-""
-" @setting g:no_plugin_maps
-" Prevent loading of plugin mappings (@section(mappings)).
+if exists('g:no_plugin_maps') && g:no_plugin_maps | finish | endif
 
 ""
 " @setting g:no_markdown_maps
-" Prevent loading of plugin mappings (@section(mappings)).
+" Prevents loading of plugin mappings if set to a true value. (See also
+" discussion of "g:no_plugin_maps" in @section(mappings).)
 
 ""
 " @setting g:no_md_maps
-" Prevent loading of plugin mappings (@section(mappings)).
+" Prevents loading of plugin mappings if set to a true value. (See also
+" discussion of "g:no_plugin_maps" in @section(mappings).)
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
@@ -49,6 +48,10 @@ set cpoptions&vim
 " <Leader>pm
 "   * convert yaml metadata block to use panzer
 "   * calls @function(dn#md#panzerifyMetadata)
+"
+" @plugin(name) adheres to the convention that plugin mappings are not loaded
+" if any of the variables "g:no_plugin_maps", |g:no_md_maps| or
+" |g:no_markdown_maps| are set to a true value.
 
 " }}}1
 

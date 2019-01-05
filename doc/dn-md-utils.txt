@@ -56,14 +56,13 @@ Prevents automatic deletion ("cleaning") of output artefacts when a buffer is
 deleted or vim exits. For more information see |dn#md#cleanBuffer()|,
 |dn#md#cleanAllBuffers()|, and |dn-md-utils-autocmds|.
 
-                                                            *g:no_plugin_maps*
-Prevent loading of plugin mappings (|dn-md-utils-mappings|).
-
                                                           *g:no_markdown_maps*
-Prevent loading of plugin mappings (|dn-md-utils-mappings|).
+Prevents loading of plugin mappings if set to a true value. (See also
+discussion of "g:no_plugin_maps" in |dn-md-utils-mappings|.)
 
                                                                 *g:no_md_maps*
-Prevent loading of plugin mappings (|dn-md-utils-mappings|).
+Prevents loading of plugin mappings if set to a true value. (See also
+discussion of "g:no_plugin_maps" in |dn-md-utils-mappings|.)
 
 ==============================================================================
 FEATURES                                                *dn-md-utils-features*
@@ -248,6 +247,10 @@ The following mappings are provided for both |Insert-mode| and |Normal-mode|:
 <Leader>pm
   * convert yaml metadata block to use panzer
   * calls |dn#md#panzerifyMetadata()|
+
+dn-md-utils adheres to the convention that plugin mappings are not loaded if
+any of the variables "g:no_plugin_maps", |g:no_md_maps| or
+|g:no_markdown_maps| are set to a true value.
 
 ==============================================================================
 AUTOCOMMANDS                                            *dn-md-utils-autocmds*
