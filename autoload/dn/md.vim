@@ -215,35 +215,35 @@ let s:ebook_metadata = {
             \ 'title': {
             \   'explain' : '',
             \   'item'    : 'Title:       %',
-            \   'prompt'  : 'Enter title:',
+            \   'prompt'  : 'Enter title: ',
             \   'option'  : '--title',
             \   'value'   : '',
             \   },
             \ 'authors': {
             \   'explain' : 'Multiple authors = First Last & First Last',
             \   'item'    : 'Author(s):   %',
-            \   'prompt'  : 'Enter authors (separate with &):',
+            \   'prompt'  : 'Enter authors: ',
             \   'option'  : '--authors',
             \   'value'   : '',
             \   },
             \ 'series': {
             \   'explain' : '',
             \   'item'    : 'Series: %',
-            \   'prompt'  : 'Enter series name:',
+            \   'prompt'  : 'Enter series name: ',
             \   'option'  : '--series',
             \   'value'   : '',
             \   },
             \ 'index': {
             \   'explain' : '',
             \   'item'    : 'Series index: %',
-            \   'prompt'  : 'Enter position in series:',
+            \   'prompt'  : 'Enter position in series: ',
             \   'option'  : '--series-index',
             \   'value'   : '',
             \   },
             \ 'cover': {
             \   'explain' : 'Cover image can be a jpg, png or gif file',
             \   'item'    : 'Cover image: %',
-            \   'prompt'  : 'Enter cover image file path:',
+            \   'prompt'  : 'Enter cover image file path: ',
             \   'option'  : '--cover',
             \   'value'   : '',
             \   },
@@ -649,7 +649,7 @@ function! s:generate_mobi() abort
     endif
     " give user opportunity to edit extracted values
     while v:true
-        let l:prompt = 'Select an entry to edit (empty value if done)'
+        let l:prompt = 'Select an entry to edit'
         let l:menu = {}
         for [l:tag, l:details] in items(l:ebook_metadata)
             let l:val = empty(l:details.value) ? '⸺' : l:details.value
