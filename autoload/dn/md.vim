@@ -547,7 +547,7 @@ function! s:generate_mobi() abort
     for l:ext in ['.jpg', '.png', '.gif']
         let l:cover = substitute(expand('%'), '\.md$', l:ext, '')
         if filereadable(l:cover)
-            call add(l:cover, l:cover)
+            call add(l:covers, l:cover)
         endif
     endfor
     if len(l:covers) >= 1
