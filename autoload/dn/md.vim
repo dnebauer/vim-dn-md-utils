@@ -559,6 +559,7 @@ function! s:generate_mobi() abort
     " check for editable metadata values
     if executable(l:extractor)
         let l:cmd = [l:extractor, l:epub]
+        echo 'Extracting metadata...'
         let l:meta_output = systemlist(l:cmd)
         if v:shell_error
             " l:meta_output now contains shell error feedback
