@@ -691,6 +691,7 @@ function! s:generate_mobi() abort
     if !filereadable(l:mobi)
         throw 'ERROR(NoMobi) No mobi file created during epub conversion'
     endif
+    echo 'Mobi output generated'
     return
 endfunction
 
