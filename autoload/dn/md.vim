@@ -556,7 +556,7 @@ function! s:generate_mobi() abort
         let l:msg .= (len(l:covers) == 1) ? 'image:' : 'images:'
         echo l:msg
         for l:cover in l:covers
-            echo '  - ' . l:cover
+            echo '- ' . l:cover
         endfor
         let l:cover = l:covers[0]
         echo "Selecting '" . l:cover . "' as cover image"
