@@ -650,11 +650,12 @@ function! s:generate_mobi() abort
     " give user opportunity to edit extracted values
     while v:true
         let l:prompt = 'Select an entry to edit'
-        let l:menu = {}
-        for [l:tag, l:details] in items(l:ebook_metadata)
+        let l:menu = []
+        for l:tag in sort(keys(l:ebook_metadata))
+            let l:details = l:ebook_metadata[l:tag]
             let l:val = empty(l:details.value) ? '⸺' : l:details.value
             let l:item = substitute(l:details.item, '%', l:val, '')
-            let l:menu[l:item] = l:tag
+            call add(l:menu, {l:item : l:tag})
         endfor
         let l:pick = dn#util#menuSelect(l:menu, l:prompt)
         if empty(l:pick) | break | endif
@@ -667,6 +668,7 @@ function! s:generate_mobi() abort
         let l:details.value = l:input
     endwhile
     " creat mobi file
+    echo 'Generating output...'
     let l:mobi = substitute(expand('%'), '\.md$', '.mobi', '')
     let l:opts = ['--pretty-print', '--mobi-file-type=both',
                 \ '--insert-blank-line']
