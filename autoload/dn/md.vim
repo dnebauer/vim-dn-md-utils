@@ -668,7 +668,7 @@ function! s:generate_mobi() abort
     " creat mobi file
     let l:mobi = substitute(expand('%'), '\.md$', '.mobi', '')
     let l:opts = ['--pretty-print', '--mobi-file-type=both',
-                \ '--insert-blank-line', '--insert-metadata']
+                \ '--insert-blank-line']
     let l:cmd = [l:converter, l:epub, l:mobi]
     call extend(l:cmd, l:opts)
     for [l:tag, l:details] in items(l:ebook_metadata)
