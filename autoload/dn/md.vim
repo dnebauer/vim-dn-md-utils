@@ -663,6 +663,7 @@ function! s:generate_mobi() abort
         endif
         let l:details = l:ebook_metadata[l:pick]
         let l:input = input(l:details.prompt, l:details.value, 'file')
+        echo ' '
         let l:details.value = l:input
     endwhile
     " creat mobi file
