@@ -677,7 +677,8 @@ function! s:generate_mobi() abort
             call add(l:cmd, l:opt)
         endif
     endfor
-    let l:conversion_output = systemlist(l:cmd)
+    "let l:conversion_output = systemlist(l:cmd)
+    let l:conversion_output = system(join(l:cmd))
     if v:shell_error
         " l:conversion_output now contains shell error feedback
         let l:err = ['Unable to create mobi file from epub file']
