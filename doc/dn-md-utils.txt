@@ -138,7 +138,7 @@ OUTPUT
 
 The dn-md-utils ftplugin leaves the bulk of output generation to |vim-pandoc|,
 but does generate mobi output since pandoc, and hence |vim-pandoc|, does not
-handle mobi format (see |dn#md#generateMobi()| and |:Mobi|).
+handle mobi format (see |dn#md#generateMobi()| and |:Mobify|).
 
 The dn-md-utils ftplugin does provide a mapping, command and function for
 deleting output files and temporary output directories. The term "clean" is
@@ -205,7 +205,7 @@ following pandoc command line argument:
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*
 
-:[N]Mobi                                                               *:Mobi*
+:[N]Mobify                                                           *:Mobify*
   Calls |dn#md#generateMobi()| to create a mobi output file from a previously
   output epub file.
 

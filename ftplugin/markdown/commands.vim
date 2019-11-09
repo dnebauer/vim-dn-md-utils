@@ -12,12 +12,12 @@ set cpoptions&vim
 
 " Commands
 
-" Mobi                   - create mobi file from epub output file    {{{1
+" Mobify                  - create mobi file from epub output file    {{{1
 
 ""
 " Calls @function(dn#md#generateMobi) to create a mobi output file from a
 " previously output epub file.
-command -buffer Mobi call dn#md#generateMobi()
+command -buffer Mobify call dn#md#generateMobi()
 
 " MUAddBoilerplate       - add metadata and references boilerplate    {{{1
 

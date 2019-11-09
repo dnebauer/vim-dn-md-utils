@@ -120,7 +120,7 @@ set cpoptions&vim
 " The @plugin(name) ftplugin leaves the bulk of output generation to
 " |vim-pandoc|, but does generate mobi output since pandoc, and hence
 " |vim-pandoc|, does not handle mobi format (see @function(dn#md#generateMobi)
-" and @command(Mobi)).
+" and @command(Mobify)).
 "
 " The @plugin(name) ftplugin does provide a mapping, command and function for
 " deleting output files and temporary output directories. The term "clean" is
