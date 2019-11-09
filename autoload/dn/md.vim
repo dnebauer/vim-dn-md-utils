@@ -538,7 +538,7 @@ function! s:generate_mobi() abort
     " warn if epub older than source markdown
     if getftime(expand('%')) > getftime(l:epub)
         call dn#util#warn('The epub file is older than its markdown source')
-        if confirm('Continue anyway?', '&Yes\n&No', 2) != 1 | return | endif
+        if confirm('Continue anyway?', "&Yes\n&No", 2) != 1 | return | endif
     endif
     " check for cover image
     " - has same basename as epub
