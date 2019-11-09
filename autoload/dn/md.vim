@@ -673,7 +673,7 @@ function! s:generate_mobi() abort
     call extend(l:cmd, l:opts)
     for [l:tag, l:details] in items(l:ebook_metadata)
         if !empty(l:details.value)
-            let l:opt = l:details.option . shellescape(l:details.value)
+            let l:opt = l:details.option . '=' . shellescape(l:details.value)
             call add(l:cmd, l:opt)
         endif
     endfor
