@@ -42,12 +42,14 @@ figures. They assume the images are defined using reference links with optional
 attributes, and that all reference links are added to the end of the document
 prefixed with three spaces.
 
-This plugin does not assist with generation of output, but does provide a
-mapping, command and function for deleting output files and temporary output
-directories. Read the help file carefully before using this feature as it is
-potentially unsafe. By default, when buffers are deleted or vim exits, the user
-has an opportunity to delete output files/directories. This feature can be
-disabled.
+This plugin leaves the bulk of output generation to
+[vim-pandoc](https://github.com/vim-pandoc/vim-pandoc), but does handle mobi
+generation since [pandoc](https://pandoc.org/) does not. In addition, this
+plugin provides a mapping, command and function for deleting output files and
+temporary output directories. Read the help file carefully before using this
+feature as it is potentially unsafe. By default, when buffers are deleted or
+vim exits, the user has an opportunity to delete output files/directories. This
+feature can be disabled.
 
 Provides a function and command for changing the pandoc `--highlight-style`
 setting by altering the pandoc compiler arguments defined by

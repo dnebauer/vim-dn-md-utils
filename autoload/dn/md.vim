@@ -117,10 +117,14 @@ set cpoptions&vim
 "
 " @subsection Output
 "
-" The @plugin(name) ftplugin does not assist with generation of output, but
-" does provide a mapping, command and function for deleting output files and
-" temporary output directories. The term "clean" is used, as in the makefile
-" keyword that deletes all working and output files.
+" The @plugin(name) ftplugin leaves the bulk of output generation to
+" |vim-pandoc|, but does generate mobi output since pandoc, and hence
+" |vim-pandoc| does not handle mobi format (see @function(dn#md#generateMobi)
+" and @command(Mobi)).
+"
+" The @plugin(name) ftplugin does provide a mapping, command and function for
+" deleting output files and temporary output directories. The term "clean" is
+" used, as in the makefile keyword that deletes all working and output files.
 "
 " Cleaning of output only occurs if the current buffer contains a file. The
 " directory searched for items to delete is the directory in which the file in
@@ -201,6 +205,49 @@ let s:clean_dirs = ['.tmp']
 ""
 " Suffixes of output files that will be deleted by cleanup routine.
 let s:clean_suffixes = ['htm', 'html', 'pdf', 'epub', 'mobi']
+
+" s:ebook_metadata - template of ebook metadata structure    {{{1
+
+""
+" An internal data structure used for manipulating ebook tags. It is
+" not used directly but copied to a local function variable.
+let s:ebook_metadata = {
+            \ 'title': {
+            \   'explain' : '',
+            \   'item'    : 'Title:       %',
+            \   'prompt'  : 'Enter title:',
+            \   'option'  : '--title',
+            \   'value'   : '',
+            \   },
+            \ 'authors': {
+            \   'explain' : 'Multiple authors = First Last & First Last',
+            \   'item'    : 'Author(s):   %',
+            \   'prompt'  : 'Enter authors (separate with &):',
+            \   'option'  : '--authors',
+            \   'value'   : '',
+            \   },
+            \ 'series': {
+            \   'explain' : '',
+            \   'item'    : 'Series: %',
+            \   'prompt'  : 'Enter series name:',
+            \   'option'  : '--series',
+            \   'value'   : '',
+            \   },
+            \ 'index': {
+            \   'explain' : '',
+            \   'item'    : 'Series index: %',
+            \   'prompt'  : 'Enter position in series:',
+            \   'option'  : '--series-index',
+            \   'value'   : '',
+            \   },
+            \ 'cover': {
+            \   'explain' : 'Cover image can be a jpg, png or gif file',
+            \   'item'    : 'Cover image: %',
+            \   'prompt'  : 'Enter cover image file path:',
+            \   'option'  : '--cover',
+            \   'value'   : '',
+            \   },
+            \ }
 
 " s:md_filetypes   - valid markdown filetypes    {{{1
 
@@ -453,6 +500,196 @@ endfunction
 " permissions.
 function! s:fp_exists(fp)
     return !empty(glob(a:fp))
+endfunction
+
+" s:generate_mobi()    {{{1
+
+""
+" @private
+" Create a mobi file from an epub file using 'ebook-convert'. The user is able
+" to specify a new or replacement cover image.
+"
+" If 'ebook-meta' is available, further changes can be made to metadata: the
+" user can edit the title and author. Also, as the mobi format does not
+" support the series and series-index tags, these are incorporated into the
+" title as 'series - index - title'.
+" 
+" No value is returned.
+" @throws BadMeta if metadata output is invalid
+" @throws ConversionFailed if unable to convert epub file to mobi
+" @throws NoConverter if cannot find ebook coverter executable
+" @throws NoEpub if no epub output file available to convert
+" @throws NoMeta if not able to extract epub metadata
+" @throws NoMobi if no mobi file created during epub conversion
+function! s:generate_mobi() abort
+    " variables
+    let l:epub = substitute(expand('%'), '\.md$', '.epub', '')
+    let l:converter = 'ebook-convert'
+    let l:extractor = 'ebook-meta'
+    let l:ebook_metadata = deepcopy(s:ebook_metadata)
+    " need epub file as source
+    if !filereadable(l:epub)
+        throw 'ERROR(NoEpub): No epub output file available to convert'
+    endif
+    " need ebook converter
+    if !executable(l:converter)
+        throw 'ERROR(NoConverter): Cannot find ' . l:converter
+    endif
+    " check for cover image
+    " - has same basename as epub
+    let l:covers = []
+    for l:ext in ['.jpg', '.png', '.gif']
+        let l:cover = substitute(expand('%'), '\.md$', l:ext, '')
+        if filereadable(l:cover)
+            call add(l:cover, l:cover)
+        endif
+    endfor
+    if len(l:covers) >= 1
+        " found at least one cover
+        let l:msg = 'Found possible cover '
+        let l:msg .= len(l:covers) == 1 ? 'image:' : 'images:'
+        echo l:msg
+        for l:cover in l:covers
+            echo '  - ' . l:cover
+        endfor
+        let l:cover = l:covers[0]
+        echo "Selecting '" . l:cover . "' as cover image"
+        let l:ebook_metadata.cover.value = l:cover
+    endif
+    " check for editable metadata values
+    if executable(l:extractor)
+        let l:cmd = [l:extractor, l:epub]
+        let l:meta_output = systemlist(l:cmd)
+        if v:shell_error
+            " l:meta_output now contains shell error feedback
+            let l:err = ['Unable to extract metadata from epub output file']
+            if !empty(l:meta_output)
+                call map(l:meta_output, '"  " . v:val')
+                call extend(l:err, ['Error message:'] + l:meta_output)
+            endif
+            call dn#util#warn(l:err)
+            throw 'ERROR(NoMeta) Unable to extract epub metadata'
+        endif
+        " - metadata output includes lines like:
+        "     'Author(s)           : Seanan A. McGuire'
+        "     'Series              : Velveteen vs. #1'
+        "   where the Series field combines the 'series' tag value, in this
+        "   case 'Velveteen vs.', and the 'series-index' tag value, in this
+        "   case '1'
+        " - the regex below returns multiple matches: \1 is the tag name,
+        "   \2 is the tag value, and \3 is the series index for a series tag
+        " - if used with matchlist, [0] is the total string while [1], [2],
+        "   and [3] correspond to \1, \2 and \3, respectively
+        let l:re_meta = '\m^\([^:]\{-1,}\)\s\{}:\s'
+                    \ . '\(.\{-1,}\)'
+                    \ . '\%(\s#\([^#\s]\{-1,}\)\)\?$'
+        for l:line in l:meta_output
+            let l:matches = matchlist(l:line, l:re_meta)
+            if empty(l:matches) | continue | endif
+            let l:match_len = len(l:matches)
+            " extract tag name and value, and possibly series index
+            let l:tag = v:null | let l:val = v:null | let l:index = v:null
+            if l:match_len < 3 || l:match_len > 4
+                throw "ERROR(BadMeta) Invalid metadata '" . l:line . "'"
+            endif
+            let l:tag = l:matches[1]
+            let l:val = l:matches[2]
+            if l:match_len == 4
+                let l:index = l:matches[3]
+            endif
+            if !empty(l:index) && l:tag !~# '\m^Series'
+                throw "ERROR(BadMeta) Invalid metadata '" . l:line . "'"
+            endif
+            " assign tag details to correct tag
+            for [l:name, l:details] in items(l:ebook_metadata)
+                " first handle case of series ± index
+                if l:tag =~# '\m^Title' 
+                    let l:ebook_metadata.title.value = l:val
+                elseif l:tag =~# '\m^Author' 
+                    let l:ebook_metadata.authors.value = l:val
+                elseif l:tag =~# '\m^Series'
+                    let l:ebook_metadata.series.value = l:val
+                    if !empty(l:index)
+                        let l:ebook_metadata.index.value = l:index
+                    endif
+                endif
+            endfor
+        endfor
+        " sanity checks
+        if empty(l:ebook_metadata.title.value)
+            call dn#util#warn('Could next find the epub title')
+        endif
+        if empty(l:ebook_metadata.authors.value)
+            call dn#util#warn('Could next find the epub authors')
+        endif
+        " incorporate series ± index into title
+        if !empty(l:ebook_metadata.series.value)
+            let l:title = l:ebook_metadata.series.value
+            if !empty(l:ebook_metadata.index.value)
+                let l:title .= ' - ' . l:ebook_metadata.index.value
+            endif
+            if !empty(l:ebook_metadata.title.value)
+                let l:title .= ' - ' . l:ebook_metadata.title.value
+            endif
+            let l:ebook_metadata.title.value = l:title
+            echo 'Mobi format does not support series or series index tags'
+            echo 'Incorporating them into the title'
+        endif
+        " done now with series and series index
+        call remove(l:ebook_metadata, 'series')
+        call remove(l:ebook_metadata, 'index')
+    else
+        echo "Cannot find executable '" . l:extractor . "'"
+        echo '- unable to extract metadata for editing'
+        for l:tag in ['author', 'title', 'series', 'index']
+            call remove(l:ebook_metadata, l:tag)
+        endfor
+    endif
+    " give user opportunity to edit extracted values
+    while v:true
+        let l:prompt = 'Select an entry to edit (empty value if done)'
+        let l:menu = {}
+        for [l:tag, l:details] in items(l:ebook_metadata)
+            let l:val = empty(l:details.value) ? '⸺' : l:details.value
+            let l:item = substitute(l:details.item, '%', l:val, '')
+            let l:menu[l:item] = l:tag
+        endfor
+        let l:pick = dn#util#menuSelect(l:menu, l:prompt)
+        if empty(l:pick) | break | endif
+        if !empty(l:ebook_metadata[l:pick]['explain'])
+            echo l:ebook_metadata[l:pick]['explain']
+        endif
+        let l:details = l:ebook_metadata[l:pick]
+        let l:input = input(l:details.prompt, l:details.value, 'file')
+        let l:details.value = l:input
+    endwhile
+    " creat mobi file
+    let l:mobi = substitute(expand('%'), '\.md$', '.mobi', '')
+    let l:opts = ['--pretty-print', '--mobi-file-type=both',
+                \ '--insert-blank-line', '--insert-metadata']
+    let l:cmd = [l:converter, l:epub, l:mobi]
+    call extend(l:cmd, l:opts)
+    for [l:tag, l:details] in items(l:ebook_metadata)
+        if !empty(l:details.value)
+            let l:opt = l:details.option . shellescape(l:details.value)
+            call add(l:cmd, l:opt)
+        endif
+    endfor
+    let l:conversion_output = systemlist(l:cmd)
+    if v:shell_error
+        " l:conversion_output now contains shell error feedback
+        let l:err = ['Unable to create mobi file from epub file']
+        if !empty(l:conversion_output)
+            call map(l:conversion_output, '"  " . v:val')
+            call extend(l:err, ['Error message:'] + l:conversion_output)
+        endif
+        call dn#util#warn(l:err)
+        throw 'ERROR(ConversionFailed) Unable to convert epub file to mobi'
+    endif
+    if !filereadable(l:mobi)
+        throw 'ERROR(NoMobi) No mobi file created during epub conversion'
+    endif
+    return
 endfunction
 
 " s:highlight_styles_available()    {{{1
@@ -1125,6 +1362,38 @@ function! dn#md#cleanBuffer(...) abort
     call s:clean_output(l:arg)
     " return to calling mode
     if l:arg.insert | call dn#util#insertMode(v:true) | endif
+endfunction
+
+" dn#md#generateMobi([insert])    {{{1
+
+""
+" @public
+" Generates a mobi output file from an existing epub output file.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+" @throws BadMeta if metadata output is invalid
+" @throws ConversionFailed if unable to convert epub file to mobi
+" @throws NoConverter if cannot find ebook coverter executable
+" @throws NoEpub if no epub output file available to convert
+" @throws NoMeta if not able to extract epub metadata
+" @throws NoMobi if no mobi file created during epub conversion
+function! dn#md#generateMobi(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    " generate mobi
+    try
+        call s:generate_mobi()
+    catch
+        echo ' '
+        call dn#util#error(dn#util#exceptionError(v:exception))
+    endtry
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
 
 " dn#md#insertFigure([insert])    {{{1

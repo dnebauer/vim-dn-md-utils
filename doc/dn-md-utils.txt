@@ -136,10 +136,13 @@ function, which can be called using the command |:MUInsertFigure| and mapping
 
 OUTPUT
 
-The dn-md-utils ftplugin does not assist with generation of output, but does
-provide a mapping, command and function for deleting output files and
-temporary output directories. The term "clean" is used, as in the makefile
-keyword that deletes all working and output files.
+The dn-md-utils ftplugin leaves the bulk of output generation to |vim-pandoc|,
+but does generate mobi output since pandoc, and hence |vim-pandoc| does not
+handle mobi format (see |dn#md#generateMobi()| and |:Mobi|).
+
+The dn-md-utils ftplugin does provide a mapping, command and function for
+deleting output files and temporary output directories. The term "clean" is
+used, as in the makefile keyword that deletes all working and output files.
 
 Cleaning of output only occurs if the current buffer contains a file. The
 directory searched for items to delete is the directory in which the file in
@@ -201,6 +204,10 @@ following pandoc command line argument:
 
 ==============================================================================
 COMMANDS                                                *dn-md-utils-commands*
+
+:[N]Mobi                                                               *:Mobi*
+  Calls |dn#md#generateMobi()| to create a mobi output file from a previously
+  output epub file.
 
 :[N]MUAddBoilerplate                                       *:MUAddBoilerplate*
   Calls |dn#md#addBoilerplate()| to add a metadata header template, including
@@ -374,6 +381,19 @@ dn#md#cleanBuffer([arg])                                 *dn#md#cleanBuffer()*
   Throws ERROR(NonMDBuffer) if specified buffer does not have a markdown
   filetype
   Throws ERROR(WrongBufNrType) if buffer number value is not a number
+
+dn#md#generateMobi([insert])                            *dn#md#generateMobi()*
+  Generates a mobi output file from an existing epub output file.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+  Throws ERROR(BadMeta) if metadata output is invalid
+  Throws ERROR(ConversionFailed) if unable to convert epub file to mobi
+  Throws ERROR(NoConverter) if cannot find ebook coverter executable
+  Throws ERROR(NoEpub) if no epub output file available to convert
+  Throws ERROR(NoMeta) if not able to extract epub metadata
+  Throws ERROR(NoMobi) if no mobi file created during epub conversion
 
 dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   Inserts a figure on a new line.
