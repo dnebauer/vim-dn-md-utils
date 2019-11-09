@@ -547,7 +547,7 @@ function! s:generate_mobi() abort
     if len(l:covers) >= 1
         " found at least one cover
         let l:msg = 'Found possible cover '
-        let l:msg .= len(l:covers) == 1 ? 'image:' : 'images:'
+        let l:msg .= (len(l:covers) == 1) ? 'image:' : 'images:'
         echo l:msg
         for l:cover in l:covers
             echo '  - ' . l:cover
@@ -584,19 +584,21 @@ function! s:generate_mobi() abort
                     \ . '\(.\{-1,}\)'
                     \ . '\%(\s#\([^#\s]\{-1,}\)\)\?$'
         for l:line in l:meta_output
+            " get matches in line of metadata output
             let l:matches = matchlist(l:line, l:re_meta)
+            " - matchlist pads return list with empty items
+            while len(l:matches) && empty(l:matches[-1])
+                call remove(l:matches, -1)
+            endwhile
             if empty(l:matches) | continue | endif
             let l:match_len = len(l:matches)
             " extract tag name and value, and possibly series index
-            let l:tag = v:null | let l:val = v:null | let l:index = v:null
             if l:match_len < 3 || l:match_len > 4
                 throw "ERROR(BadMeta) Invalid metadata '" . l:line . "'"
             endif
             let l:tag = l:matches[1]
             let l:val = l:matches[2]
-            if l:match_len == 4
-                let l:index = l:matches[3]
-            endif
+            let l:index = (l:match_len == 4) ? l:matches[3] : ''
             if !empty(l:index) && l:tag !~# '\m^Series'
                 throw "ERROR(BadMeta) Invalid metadata '" . l:line . "'"
             endif
