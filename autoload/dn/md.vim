@@ -331,6 +331,7 @@ let s:refs = [
 " 
 " @default arg={'bufnr': 0, 'confirm': false, 'pause_end': false, 'say_none': false}
 "
+" @throws ArgCount if wrong number of arguments provided
 " @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict arg contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
