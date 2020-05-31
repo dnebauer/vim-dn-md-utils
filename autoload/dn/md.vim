@@ -759,11 +759,7 @@ function! s:insert_figure() abort
     echo ' '  | " ensure move to a new line
     if empty(l:caption) | return | endif
     " get id/label
-    let l:default = tolower(l:caption)
-    let l:default = substitute(l:default, '[^a-z0-9_-]', '-', 'g')
-    let l:default = substitute(l:default, '^-\+', '', '')
-    let l:default = substitute(l:default, '-\+$', '', '')
-    let l:default = substitute(l:default, '-\{2,\}', '-', 'g')
+    let l:default = s:make_into_id_value(l:caption)
     let l:prompt  = 'Enter figure id (empty to abort): '
     while 1
         let l:id = input(l:prompt, l:default)
@@ -771,7 +767,7 @@ function! s:insert_figure() abort
         " empty value means aborting
         if empty(l:id) | return '' | endif
         " must be legal id
-        if l:id !~# '\%^[a-z0-9_-]\+\%$'
+        if !s:is_valid_id_value(l:id)
             call dn#util#warn('Ids contain only a-z, 0-9, _ and -')
             continue
         endif
@@ -917,6 +913,36 @@ function! s:insert_highlight_language() abort
     " insert highlight language at current cursor location
     silent execute 'normal! A' . l:lang
     return
+endfunction
+
+" s:is_valid_id_value(value)    {{{1
+
+""
+" @private
+" Ensure supplied value is a valid id (or label) value. Id values contain only
+" a-z, 0-9, _ and - characters.
+function! s:is_valid_id_value(value) abort
+    return a:value =~# '\%^[a-z0-9_-]\+\%$'
+endfunction
+
+" s:make_into_id_value(value)    {{{1
+
+""
+" @private
+" Convert supplied value into an id (or label) value. Id values contain only
+" a-z, 0-9, _ and - characters. Leading and trailing dashes are removed.
+function! s:make_into_id_value(value) abort
+    " lowercase only
+    let l:value = tolower(a:value)
+    " remove illegal characters
+    let l:value = substitute(l:value, '[^a-z0-9_-]', '-', 'g')
+    " remove leading dashes
+    let l:value = substitute(l:value, '^-\+', '', '')
+    " remove trailing dashes
+    let l:value = substitute(l:value, '-\+$', '', '')
+    " collapse sequential dashes into single dash
+    let l:value = substitute(l:value, '-\{2,\}', '-', 'g')
+    return l:value
 endfunction
 
 " s:md_filetype(filetype)    {{{1
