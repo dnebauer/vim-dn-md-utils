@@ -149,10 +149,11 @@ filter (https://github.com/tomduck/pandoc-tablenos). In this example:
 
     Table: A simple table. {#tbl:simple}
 <
-the definition is "Table: A simple table. {#tbl:simple}". It is inserted on
-the following line using the |dn#md#insertTable()| function, which can be
-called using the command |:MUInsertTable| and mapping "<Leader>tbl" (see
-|dn-md-utils-mappings|).
+the definition is "Table: A simple table. {#tbl:simple}".
+
+The definition is inserted on the following line using the
+|dn#md#insertTable()| function, which can be called using the command
+|:MUInsertTable| and mapping "<Leader>tbl" (see |dn-md-utils-mappings|).
 
 OUTPUT
 

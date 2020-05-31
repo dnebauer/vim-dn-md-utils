@@ -131,10 +131,11 @@ set cpoptions&vim
 "     
 "     Table: A simple table. {#tbl:simple}
 " <
-" the definition is "Table: A simple table. {#tbl:simple}". It is inserted on
-" the following line using the @function(dn#md#insertTable) function, which
-" can be called using the command @command(MUInsertTable) and mapping
-" "<Leader>tbl" (see @section(mappings)).
+" the definition is "Table: A simple table. {#tbl:simple}".
+"
+" The definition is inserted on the following line using the
+" @function(dn#md#insertTable) function, which can be called using the command
+" @command(MUInsertTable) and mapping "<Leader>tbl" (see @section(mappings)).
 "
 " @subsection Output
 "
