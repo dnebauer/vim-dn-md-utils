@@ -852,7 +852,6 @@ function! s:insert_figure() abort
             call add(l:classes, l:name . '="' . l:value . '"')
         endif
     endwhile
-    echo '-------'
     " assemble link and link definition
     let l:attrs_str = ''
     if !empty(l:attributes)
