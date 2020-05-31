@@ -119,9 +119,9 @@ set cpoptions&vim
 "
 " A helper function, mapping and command are provided to assist with adding
 " tables. More specifically, they aid with adding the caption and id
-" definition line following the table. The syntax used is that specified by
-" the pandoc-tablenos filter (https://github.com/tomduck/pandoc-tablenos).
-" In this example:
+" definition following the table. The syntax used is that expected by the
+" pandoc-tablenos filter (https://github.com/tomduck/pandoc-tablenos). In
+" this example:
 " >
 "     \*@tbl:simple is a simple table.
 "     
@@ -131,10 +131,10 @@ set cpoptions&vim
 "     
 "     Table: A simple table. {#tbl:simple}
 " <
-" the line "Table: A simple table. {#tbl:simple}" is the caption and id line.
-" It is inserted on the following line using the @function(dn#md#insertTable)
-" function, which can be called using the command @command(MUInsertTable) and
-" mapping "<Leader>tbl" (see @section(mappings)).
+" the definition is "Table: A simple table. {#tbl:simple}". It is inserted on
+" the following line using the @function(dn#md#insertTable) function, which
+" can be called using the command @command(MUInsertTable) and mapping
+" "<Leader>tbl" (see @section(mappings)).
 "
 " @subsection Output
 "

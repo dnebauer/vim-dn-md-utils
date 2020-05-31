@@ -49,6 +49,10 @@ set cpoptions&vim
 "   * convert yaml metadata block to use panzer
 "   * calls @function(dn#md#panzerifyMetadata)
 "
+" <Leader>tbl
+"   * insert table caption and id definition on the following line
+"   * calls @function(dn#md#insertTable)
+"
 " @plugin(name) adheres to the convention that plugin mappings are not loaded
 " if any of the variables "g:no_plugin_maps", |g:no_md_maps| or
 " |g:no_markdown_maps| are set to a true value.
@@ -126,11 +130,12 @@ endif
 nmap <buffer> <unique> <Plug>DnHLN
             \ :call dn#md#insertHighlightLanguage()<CR>
 
-" \tbl - insert table caption and id    {{{1
+" \tbl - insert table caption and id definition    {{{1
 
 ""
 " Calls @function(dn#md#insertTable) from |Insert-mode| and
-" |Normal-mode| to insert a table caption and id on the following line.
+" |Normal-mode| to insert a table caption and id definition on the following
+" line.
 if !hasmapto('<Plug>DnTBLI')
     imap <buffer> <unique> <LocalLeader>tbl <Plug>DnTBLI
 endif

@@ -12,7 +12,7 @@ set cpoptions&vim
 
 " Commands
 
-" Mobify                  - create mobi file from epub output file    {{{1
+" Mobify                 - create mobi file from epub output file    {{{1
 
 ""
 " Calls @function(dn#md#generateMobi) to create a mobi output file from a
@@ -53,8 +53,8 @@ command -buffer MUInsertFigure call dn#md#insertFigure()
 " MUInsertTable          - insert table caption and id line    {{{1
 
 ""
-" Calls @function(dn#md#insertTable) to insert a caption and id on the
-" following line.
+" Calls @function(dn#md#insertTable) to insert a caption and id definition on
+" the following line.
 command -buffer MUInsertTable call dn#md#insertTable()
 
 " MUPanzerifyMetadata    - convert yaml metadata to use panzer    {{{1

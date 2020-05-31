@@ -138,9 +138,8 @@ TABLES
 
 A helper function, mapping and command are provided to assist with adding
 tables. More specifically, they aid with adding the caption and id definition
-line following the table. The syntax used is that specified by the
-pandoc-tablenos filter (https://github.com/tomduck/pandoc-tablenos). In this
-example:
+following the table. The syntax used is that expected by the pandoc-tablenos
+filter (https://github.com/tomduck/pandoc-tablenos). In this example:
 >
     \*@tbl:simple is a simple table.
 
@@ -150,10 +149,10 @@ example:
 
     Table: A simple table. {#tbl:simple}
 <
-the line "Table: A simple table. {#tbl:simple}" is the caption and id line. It
-is inserted on the following line using the |dn#md#insertTable()| function,
-which can be called using the command |:MUInsertTable| and mapping
-"<Leader>tbl" (see |dn-md-utils-mappings|).
+the definition is "Table: A simple table. {#tbl:simple}". It is inserted on
+the following line using the |dn#md#insertTable()| function, which can be
+called using the command |:MUInsertTable| and mapping "<Leader>tbl" (see
+|dn-md-utils-mappings|).
 
 OUTPUT
 
@@ -247,8 +246,8 @@ COMMANDS                                                *dn-md-utils-commands*
   Calls |dn#md#insertFigure()| to insert a figure on the following line.
 
 :[N]MUInsertTable                                             *:MUInsertTable*
-  Calls |dn#md#insertTable()| to insert a caption and id on the following
-  line.
+  Calls |dn#md#insertTable()| to insert a caption and id definition on the
+  following line.
 
 :[N]MUPanzerifyMetadata                                 *:MUPanzerifyMetadata*
   Calls |dn#md#panzerifyMetadata()| to add a line to the document's metadata
@@ -279,6 +278,10 @@ The following mappings are provided for both |Insert-mode| and |Normal-mode|:
 <Leader>pm
   * convert yaml metadata block to use panzer
   * calls |dn#md#panzerifyMetadata()|
+
+<Leader>tbl
+  * insert table caption and id definition on the following line
+  * calls |dn#md#insertTable()|
 
 dn-md-utils adheres to the convention that plugin mappings are not loaded if
 any of the variables "g:no_plugin_maps", |g:no_md_maps| or
