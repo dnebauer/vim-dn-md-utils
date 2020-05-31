@@ -786,8 +786,9 @@ function! s:insert_figure() abort
                 \   'type' : 'attribute',
                 \   'desc' : [
                 \     'There is a bug in pandoc-fignos whereby figure numbers',
-                \     'can reset to 1 when a new section starts -- adding a',
-                \     "'secno' attribute of '1' to the figure definition can",
+                \     'can reset to 1 when a new section starts (see issue 76',
+                \     'in github repo tomduck/pandoc-fignos) -- adding a',
+                \     "'secno' attribute of '1' to each figure definition can",
                 \     'prevent this.'
                 \   ],
                 \   'default' : '1',
