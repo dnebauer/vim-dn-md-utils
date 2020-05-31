@@ -856,15 +856,15 @@ function! s:insert_figure() abort
     " assemble link and link definition
     let l:attrs_str = ''
     if !empty(l:attributes)
-        let l:attrs_str = join(l:attributes) . ' '
+        let l:attrs_str = ' ' . join(l:attributes)
     endif
     let l:classes_str = ''
     if !empty(l:classes)
-        let l:classes_str = '.class ' . join(l:classes)
+        let l:classes_str = ' ' . '.class ' . join(l:classes)
     endif
     let l:link = '![' . l:caption . '][' . l:id . ']'
     let l:defn = '   [' . l:id . ']: ' . l:path . ' ' . '"' . l:caption 
-                \ . '" {#fig:' . l:id . ' ' . l:attrs_str . l:classes_str . '}'
+                \ . '" {#fig:' . l:id . l:attrs_str . l:classes_str . '}'
     " insert link
     let l:lines = [l:link, '', '']  " link and two empty lines
     for l:line in reverse(l:lines)
