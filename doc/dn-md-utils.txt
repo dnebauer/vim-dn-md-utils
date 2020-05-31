@@ -403,6 +403,14 @@ dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
   entered from insert mode.
   [insert] is false if omitted.
 
+dn#md#insertTable([insert])                              *dn#md#insertTable()*
+  Inserts a table caption and id line as expected by pandoc-tablenos to follow
+  a table.
+
+  The [insert] boolean argument determines whether or not the function was
+  entered from insert mode.
+  [insert] is false if omitted.
+
 dn#md#insertHighlightLanguage([insert])      *dn#md#insertHighlightLanguage()*
   Select a code block highlight language which is inserted at the end of the
   current line.

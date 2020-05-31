@@ -915,6 +915,114 @@ function! s:insert_highlight_language() abort
     return
 endfunction
 
+" s:insert_table_definition()    {{{1
+
+""
+" @private
+" Insert table definition, i.e., the caption and identification line expected
+" by pandoc-tablenos to follow the table.
+function! s:insert_table_definition() abort
+    " get table caption
+    let l:prompt = 'Enter table caption (empty to abort): '
+    let l:caption = input(l:prompt)
+    " - remove terminal periods as terminal period added later
+    let l:caption = substitute(l:caption, '\.\+$', '', '')
+    echo ' '  | " ensure move to a new line
+    if empty(l:caption) | return | endif
+    " get id/label
+    let l:default = s:make_into_id_value(l:caption)
+    let l:prompt  = 'Enter table id (empty to abort): '
+    while 1
+        let l:id = input(l:prompt, l:default)
+        echo ' '  | " ensure move to a new line
+        " empty value means aborting
+        if empty(l:id) | return '' | endif
+        " must be legal id
+        if !s:is_valid_id_value(l:id)
+            call dn#util#warn('Ids contain only a-z, 0-9, _ and -')
+            continue
+        endif
+        " ok, if here must be legal
+        break
+    endwhile
+    " get optional attributes and classes
+    let l:attributes = []
+    let l:classes = []
+    let l:opts = {}
+    while 1
+        echo '-------'
+        let l:names = sort(keys(l:opts))
+        let l:src = 'user' | let l:name = ''
+        let l:type = '' | let l:desc = [] | let l:default = ''
+        if !empty(l:names)
+            let l:src = 'opts'
+            let l:name = l:names[0]
+            let l:type = l:opts[l:name]['type']
+            call extend(l:desc, l:opts[l:name]['desc'])
+            let l:default = l:opts[l:name]['default']
+            call remove(l:opts, l:name)
+        endif
+        if l:src ==# 'user'
+            " find out what the user wants to add (break if nothing)
+            let l:prompt  = 'Do you want to add an attribute or class (empty '
+                        \ . 'if neither):'
+            let l:options = []
+            call add(l:options, {'Attribute': 'attribute'})
+            call add(l:options, {'Class': 'class'})
+            let l:type = dn#util#menuSelect(l:options, l:prompt)
+            if empty(l:type) | break | endif  " finished enter attrs/classes
+            " get attribute or class name
+            let l:prompt = 'Enter ' . l:type . ' name (empty to abort '
+                        \ . l:type . ' entry): '
+            let l:name = input(l:prompt)
+            echo ' '  | " ensure move to a new line
+            if empty(l:name) | continue | endif  " abort entering attr/class
+        else  " l:src = 'opts'
+            " confirm user wants to add this attribute or class
+            for l:line in l:desc | echo l:line | endfor
+            let l:prompt  = "Do you want to add the '" . l:name . "' "
+                        \ . l:type . '?'
+            let l:options = [{'Yes': v:true}, {'No': v:false}]
+            let l:proceed = dn#util#menuSelect(l:options, l:prompt)
+            if !l:proceed | continue | endif  " skipping this attr/class
+        endif
+        " get attribute or class value
+        let l:prompt = 'Enter ' . l:type . ' value: '
+        let l:value = input(l:prompt, l:default)
+        echo ' '  | " ensure move to a new line
+        " add attribute or class
+        if l:type ==# 'attribute'
+            call add(l:attributes, l:name . '="' . l:value . '"')
+        else  " l:type ==# 'class'
+            call add(l:classes, l:name . '="' . l:value . '"')
+        endif
+    endwhile
+    " assemble caption line
+    let l:attrs_str = ''
+    if !empty(l:attributes)
+        let l:attrs_str = ' ' . join(l:attributes)
+    endif
+    let l:classes_str = ''
+    if !empty(l:classes)
+        let l:classes_str = ' ' . '.class ' . join(l:classes)
+    endif
+    let l:line = 'Table: ' . l:caption . '. {#tbl:' . l:id . '}'
+    " insert link
+    let l:lines = [l:line, '', '']  " add two empty lines after insertion
+    for l:line in reverse(l:lines)
+        let l:failed = append(line('.'), l:line)
+        if l:failed
+            let l:msg = 'Error occurred while inserting table caption'
+            call dn#util#error(l:msg)
+            return
+        endif
+    endfor
+    " reset cursor position
+    let l:pos = getcurpos()
+    let l:pos[1] += len(l:lines)
+    call setpos('.', l:pos)
+endfunction
+
 " s:is_valid_id_value(value)    {{{1
 
 ""
@@ -1513,6 +1621,28 @@ function! dn#md#insertFigure(...) abort
     let l:insert = (a:0 > 0 && a:1)
     " insert figure
     call s:insert_figure()
+    " return to calling mode
+    if l:insert | call dn#util#insertMode(v:true) | endif
+endfunction
+
+" dn#md#insertTable([insert])    {{{1
+
+""
+" @public
+" Inserts a table caption and id line as expected by pandoc-tablenos to follow
+" a table.
+"
+" The [insert] boolean argument determines whether or not the function was
+" entered from insert mode.
+" @default insert=false
+function! dn#md#insertTable(...) abort
+    " universal tasks
+    echo '' |  " clear command line
+    if s:utils_missing() | return | endif  " requires dn-utils plugin
+    " params
+    let l:insert = (a:0 > 0 && a:1)
+    " insert figure
+    call s:insert_table_definition()
     " return to calling mode
     if l:insert | call dn#util#insertMode(v:true) | endif
 endfunction
