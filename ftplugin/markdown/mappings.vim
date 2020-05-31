@@ -96,6 +96,22 @@ nmap <buffer> <unique> <Plug>DnCON
 " \fig - insert figure    {{{1
 
 ""
+" Calls @function(dn#md#insertFigure) from |Insert-mode| and |Normal-mode| to
+" insert a figure on the following line.
+if !hasmapto('<Plug>DnFIGI')
+    imap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGI
+endif
+imap <buffer> <unique> <Plug>DnFIGI
+            \ <Esc>:call dn#md#insertFigure(v:true)<CR>
+if !hasmapto('<Plug>DnFIGN')
+    nmap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGN
+endif
+nmap <buffer> <unique> <Plug>DnFIGN
+            \ :call dn#md#insertFigure()<CR>
+
+" \hl  - insert highlight language    {{{1
+
+""
 " Calls @function(dn#md#insertHighlightLanguage) from |Insert-mode| and
 " |Normal-mode| to have the user select a code block highlight language which
 " is inserted at the end of the current line.
@@ -110,21 +126,21 @@ endif
 nmap <buffer> <unique> <Plug>DnHLN
             \ :call dn#md#insertHighlightLanguage()<CR>
 
-" \fig - insert figure    {{{1
+" \tbl - insert table caption and id    {{{1
 
 ""
-" Calls @function(dn#md#insertFigure) from |Insert-mode| and |Normal-mode| to
-" insert a figure on the following line.
-if !hasmapto('<Plug>DnFIGI')
-    imap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGI
+" Calls @function(dn#md#insertTable) from |Insert-mode| and
+" |Normal-mode| to insert a table caption and id on the following line.
+if !hasmapto('<Plug>DnTBLI')
+    imap <buffer> <unique> <LocalLeader>tbl <Plug>DnTBLI
 endif
-imap <buffer> <unique> <Plug>DnFIGI
-            \ <Esc>:call dn#md#insertFigure(v:true)<CR>
-if !hasmapto('<Plug>DnFIGN')
-    nmap <buffer> <unique> <LocalLeader>fig <Plug>DnFIGN
+imap <buffer> <unique> <Plug>DnTBLI
+            \ <Esc>:call dn#md#insertTable(v:true)<CR>
+if !hasmapto('<Plug>DnTBLN')
+    nmap <buffer> <unique> <LocalLeader>tbl <Plug>DnTBLN
 endif
-nmap <buffer> <unique> <Plug>DnFIGN
-            \ :call dn#md#insertFigure()<CR>
+nmap <buffer> <unique> <Plug>DnTBLN
+            \ :call dn#md#insertTable()<CR>
 
 " \pm  - convert yaml metadata block to use panzer    {{{1
 

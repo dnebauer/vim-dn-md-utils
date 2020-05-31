@@ -89,6 +89,8 @@ if count(g:dn_help_plugins, 'dn-md-utils') == 0
         \ '',
         \ 'insert figure               \fig     MUInsertFigure',
         \ '',
+        \ 'insert table                \tbl     MUInsertTable',
+        \ '',
         \ 'convert metadata to panzer  \pm      MUPanzerifyMetadata',
         \ ]
 endif

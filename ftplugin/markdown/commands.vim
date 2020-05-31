@@ -50,6 +50,13 @@ command -buffer MUCleanOutput
 " line.
 command -buffer MUInsertFigure call dn#md#insertFigure()
 
+" MUInsertTable          - insert table caption and id line    {{{1
+
+""
+" Calls @function(dn#md#insertTable) to insert a caption and id on the
+" following line.
+command -buffer MUInsertTable call dn#md#insertTable()
+
 " MUPanzerifyMetadata    - convert yaml metadata to use panzer    {{{1
 
 ""

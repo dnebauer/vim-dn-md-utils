@@ -115,6 +115,27 @@ set cpoptions&vim
 " command @command(MUInsertFigure) and mapping "<Leader>fig" (see
 " @section(mappings)).
 "
+" @subsection Tables
+"
+" A helper function, mapping and command are provided to assist with adding
+" tables. More specifically, they aid with adding the caption and id
+" definition line following the table. The syntax used is that specified by
+" the pandoc-tablenos filter (https://github.com/tomduck/pandoc-tablenos).
+" In this example:
+" >
+"     \*@tbl:simple is a simple table.
+"     
+"     A B
+"     - -
+"     0 1
+"     
+"     Table: A simple table. {#tbl:simple}
+" <
+" the line "Table: A simple table. {#tbl:simple}" is the caption and id line.
+" It is inserted on the following line using the @function(dn#md#insertTable)
+" function, which can be called using the command @command(MUInsertTable) and
+" mapping "<Leader>tbl" (see @section(mappings)).
+"
 " @subsection Output
 "
 " The @plugin(name) ftplugin leaves the bulk of output generation to
