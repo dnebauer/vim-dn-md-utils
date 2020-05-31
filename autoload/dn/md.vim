@@ -744,8 +744,8 @@ function! s:insert_figure() abort
     let l:prompt = 'Enter image filepath (empty to abort): '
     let l:path = input(l:prompt, '', 'file')
     if empty(l:path) | return | endif
+    echo ' '  | " ensure move to a new line
     if !filereadable(l:path)
-        echo ' '  | " ensure move to a new line
         let l:prompt  = 'Image filepath appears to be invalid:'
         let l:options = []
         call add(l:options, {'Proceed anyway': v:true})
@@ -778,35 +778,93 @@ function! s:insert_figure() abort
         " ok, if here must be legal
         break
     endwhile
-    " get (optional) attributes
+    " get optional attributes and classes
     let l:attributes = []
-    let l:name_default = 'width'
-    let l:value_default = '50%'
+    let l:classes = []
+    let l:opts = {
+                \ 'secno' : {
+                \   'type' : 'attribute',
+                \   'desc' : [
+                \     'There is a bug in pandoc-fignos whereby figure numbers',
+                \     'can reset to 1 when a new section starts -- adding a',
+                \     "'secno' attribute of '1' to the figure definition can",
+                \     'prevent this.'
+                \   ],
+                \   'default' : '1',
+                \ },
+                \ 'width' : {
+                \   'type' : 'class',
+                \   'desc' : [
+                \     'Forcing figure width to a large value can make them',
+                \     'too large for html output, but forcing it to a small',
+                \     'value can make them too large for pdf output --',
+                \     "experience shows using a 'width' class of '50%' is",
+                \     'generally a good compromise.',
+                \   ],
+                \   'default' : '50%',
+                \ },
+                \ }
     while 1
-        " get attribute name
-        let l:prompt = 'Enter attribute name (empty to abort): '
-        let l:name = input(l:prompt, l:name_default)
+        echo '-------'
+        let l:names = sort(keys(l:opts))
+        let l:src = 'user' | let l:name = ''
+        let l:type = '' | let l:desc = [] | let l:default = ''
+        if !empty(l:names)
+            let l:src = 'opts'
+            let l:name = l:names[0]
+            let l:type = l:opts[l:name]['type']
+            call extend(l:desc, l:opts[l:name]['desc'])
+            let l:default = l:opts[l:name]['default']
+            call remove(l:opts, l:name)
+        endif
+        if l:src ==# 'user'
+            " find out what the user wants to add (break if nothing)
+            let l:prompt  = 'Do you want to add an attribute or class (empty '
+                        \ . 'if neither):'
+            let l:options = []
+            call add(l:options, {'Attribute': 'attribute'})
+            call add(l:options, {'Class': 'class'})
+            let l:type = dn#util#menuSelect(l:options, l:prompt)
+            if empty(l:type) | break | endif  " finished enter attrs/classes
+            " get attribute or class name
+            let l:prompt = 'Enter ' . l:type . ' name (empty to abort '
+                        \ . l:type . ' entry): '
+            let l:name = input(l:prompt)
+            echo ' '  | " ensure move to a new line
+            if empty(l:name) | continue | endif  " abort entering attr/class
+        else  " l:src = 'opts'
+            " confirm user wants to add this attribute or class
+            for l:line in l:desc | echo l:line | endfor
+            let l:prompt  = "Do you want to add the '" . l:name . "' "
+                        \ . l:type . '?'
+            let l:options = [{'Yes': v:true}, {'No': v:false}]
+            let l:proceed = dn#util#menuSelect(l:options, l:prompt)
+            if !l:proceed | continue | endif  " skipping this attr/class
+        endif
+        " get attribute or class value
+        let l:prompt = 'Enter ' . l:type . ' value: '
+        let l:value = input(l:prompt, l:default)
         echo ' '  | " ensure move to a new line
-        if empty(l:name) | break | endif  " finished entering attributes
-        " get attribute value
-        let l:prompt = 'Enter attribute value (empty to abort): '
-        let l:value = input(l:prompt, l:value_default)
-        echo ' '  | " ensure move to a new line
-        if empty(l:value) | break | endif  " finished entering attributes
-        " add attribute
-        call add(l:attributes, l:name . '="' . l:value . '"')
-        " only suggest for first attribute
-        let l:name_default = ''
-        let l:value_default = ''
+        " add attribute or class
+        if l:type ==# 'attribute'
+            call add(l:attributes, l:name . '="' . l:value . '"')
+        else  " l:type ==# 'class'
+            call add(l:classes, l:name . '="' . l:value . '"')
+        endif
     endwhile
+    echo '-------'
     " assemble link and link definition
     let l:attrs_str = ''
     if !empty(l:attributes)
-        let l:attrs_str = ' .class ' . join(l:attributes)
+        let l:attrs_str = join(l:attributes) . ' '
+    endif
+    let l:classes_str = ''
+    if !empty(l:classes)
+        let l:classes_str = '.class ' . join(l:classes)
     endif
     let l:link = '![' . l:caption . '][' . l:id . ']'
     let l:defn = '   [' . l:id . ']: ' . l:path . ' ' . '"' . l:caption 
-                \ . '" {#fig:' . l:id . l:attrs_str . '}'
+                \ . '" {#fig:' . l:id . ' ' . l:attrs_str . l:classes_str . '}'
     " insert link
     let l:lines = [l:link, '', '']  " link and two empty lines
     for l:line in reverse(l:lines)
@@ -1415,7 +1473,8 @@ endfunction
 
 ""
 " @public
-" Inserts a figure on a new line.
+" Inserts a figure on a new line. A reference link definition is added to the
+" of the file in its own line.
 "
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.

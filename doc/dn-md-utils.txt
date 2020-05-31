@@ -396,7 +396,8 @@ dn#md#generateMobi([insert])                            *dn#md#generateMobi()*
   Throws ERROR(NoMobi) if no mobi file created during epub conversion
 
 dn#md#insertFigure([insert])                            *dn#md#insertFigure()*
-  Inserts a figure on a new line.
+  Inserts a figure on a new line. A reference link definition is added to the
+  of the file in its own line.
 
   The [insert] boolean argument determines whether or not the function was
   entered from insert mode.
