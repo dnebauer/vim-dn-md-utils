@@ -1473,7 +1473,7 @@ endfunction
 ""
 " @public
 " Inserts a figure on a new line. A reference link definition is added to the
-" of the file in its own line.
+" end of the file in its own line.
 "
 " The [insert] boolean argument determines whether or not the function was
 " entered from insert mode.
