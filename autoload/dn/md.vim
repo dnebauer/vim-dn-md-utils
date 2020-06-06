@@ -332,6 +332,8 @@ let s:refs = [
 " function exits if there is no file associated with the buffer (because
 " pandoc will not create output for it).
 "
+" Returns silently without error if the buffer is not associated with a file.
+"
 " See @function(a:valid_bufnr) for notes on how the buffer number is checked.
 "
 " Optional [arg] is a |Dictionary| with a number of valid keys, all of which
@@ -357,7 +359,6 @@ let s:refs = [
 " @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict arg contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
-" @throws NoFile if specified buffer has no associated file
 " @throws NonBoolVal if non-boolean value assigned to boolean key
 " @throws NonDictArg if expected Dict arg and got non-Dict
 " @throws NonMDBuffer if specified buffer does not have a markdown filetype
@@ -370,6 +371,8 @@ function! s:clean_output(...) abort
     try    | let l:arg = s:complete_arg(a:0 ? a:1 : {})
     catch  | throw s:exception_error(v:exception)
     endtry
+    " - can't clean unless buffer associated with a file
+    if empty(bufname(l:arg.bufnr)) | return | endif
     try    | call s:valid_bufnr(l:arg.bufnr)
     catch  | throw s:exception_error(v:exception)
     endtry
@@ -1274,18 +1277,16 @@ endfunction
 " Checks that a buffer number is valid.
 "
 " Note that some buffers can exist but not be visible with the |:ls| command.
-" For that reason this function checks that the supplied buffer number both
-" exists and is associated with a file. For the purposes of the @plugin(name)
-" ftplugin a buffer number is invalid if it is not associated with a file
-" name. This aligns with the behaviour of pandoc since it will not generate
-" output if a buffer is not associated with a file. This also means an error
-" will be generated for the edge case where a user has created a buffer and
-" set a markdown filetype, but not saved the buffer as a file.
+" For that reason this function checks that the supplied buffer number exists.
+"
+" This function is used only with @function(s:clean_output), which can only
+" act meaningfully on buffers with associated files. So, checking whether the
+" buffer has an associated file is left to @function(s:clean_output) and this
+" function does not check whether a file is associated with the buffer or not.
 "
 " For the purposes of the @plugin(name) ftplugin a buffer is also invalid if
 " it does not have a markdown filetype.
 " @throws NoBuffer if no buffer has specified buffer number
-" @throws NoFile if specified buffer has no associated file
 " @throws NonMDBuffer if specified buffer does not have a markdown filetype
 " @throws WrongBufNrType if buffer number value is not a number
 function! s:valid_bufnr(bufnr) abort
@@ -1297,9 +1298,6 @@ function! s:valid_bufnr(bufnr) abort
     endif
     if !bufexists(a:bufnr)  " check bufnr exists
         throw 'ERROR(NoBuffer): Buffer ' . a:bufnr . ' does not exist'
-    endif
-    if empty(bufname(a:bufnr))  " check buffer associated with a file
-        throw 'ERROR(NoFile): Buffer ' . a:bufnr . ' has no associated file'
     endif
     let l:ft = getbufvar(a:bufnr, '&filetype')  " check buffer file type
     if !s:md_filetype(l:ft)
@@ -1512,7 +1510,6 @@ endfunction
 " @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
-" @throws NoFile if specified buffer has no associated file
 " @throws NonBoolVal if non-boolean value assigned to boolean key
 " @throws NonDictArg if expected Dict arg and got non-Dict
 " @throws NonMDBuffer if specified buffer does not have a markdown filetype
@@ -1575,7 +1572,6 @@ endfunction
 " @throws DelFail if fail to delete output files/directories
 " @throws InvalidKey if Dict contains an invalid key
 " @throws NoBuffer if no buffer has specified buffer number
-" @throws NoFile if specified buffer has no associated file
 " @throws NonBoolVal if non-boolean value assigned to boolean key
 " @throws NonDictArg if expected Dict arg and got non-Dict
 " @throws NonMDBuffer if specified buffer does not have a markdown filetype
@@ -1588,7 +1584,10 @@ function! dn#md#cleanBuffer(...) abort
     if a:0 > 1 | throw 'ERROR(ArgCount): Expected 1 arg, got ' . a:0 | endif
     let l:arg = s:complete_arg(a:0 ? a:1 : {})
     " clean output files
-    call s:clean_output(l:arg)
+    " - but only if buffer is associated with a file
+    if !empty(bufname(l:arg.bufnr))
+        call s:clean_output(l:arg)
+    endif
     " return to calling mode
     if l:arg.insert | call dn#util#insertMode(v:true) | endif
 endfunction
